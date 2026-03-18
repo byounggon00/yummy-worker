@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>맛있는 직장인</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;900&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;900&family=Noto+Sans+KR:wght@300;400;500;700&family=Gaegu:wght@400;700&family=Jua&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0d0d0d;
@@ -56,38 +56,94 @@
     padding: 40px 0 32px;
   }
 
-  .logo-icon {
-    font-size: 48px;
-    margin-bottom: 12px;
-    display: block;
-    filter: drop-shadow(0 0 20px rgba(232,160,69,0.4));
+  .logo-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 4px;
     animation: float 3s ease-in-out infinite;
+  }
+
+  .logo-icon-combo {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .logo-emoji-main {
+    font-size: 56px;
+    display: block;
+    filter: drop-shadow(0 4px 16px rgba(232,160,69,0.4));
+    line-height: 1;
+  }
+
+  .logo-emoji-sub {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    font-size: 28px;
+    display: block;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+    line-height: 1;
   }
 
   @keyframes float {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
+    50% { transform: translateY(-7px); }
+  }
+
+  .logo-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 8px;
+  }
+
+  .logo-title .word-mat {
+    font-family: 'Jua', sans-serif;
+    font-size: 30px;
+    font-weight: 400;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+
+  .logo-title .dot-sep {
+    width: 5px;
+    height: 5px;
+    background: var(--accent2);
+    border-radius: 50%;
+    display: inline-block;
+    margin: 0 5px 3px;
+    flex-shrink: 0;
+  }
+
+  .logo-title .word-jik {
+    font-family: 'Jua', sans-serif;
+    font-size: 30px;
+    font-weight: 400;
+    color: var(--text);
+    letter-spacing: 1px;
   }
 
   h1 {
-    font-family: 'Noto Serif KR', serif;
+    font-family: 'Jua', sans-serif;
     font-size: 28px;
-    font-weight: 900;
-    letter-spacing: -0.5px;
+    font-weight: 400;
+    letter-spacing: 0.5px;
     color: var(--text);
     line-height: 1.2;
   }
-
-  h1 span {
-    color: var(--accent);
-  }
+  h1 span { color: var(--accent); }
 
   .subtitle {
     font-size: 13px;
     color: var(--text-muted);
     margin-top: 8px;
     font-weight: 300;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
   }
 
   /* Step indicator */
@@ -559,7 +615,259 @@
     color: #e07070;
   }
 
-  /* 2차 추천 버튼 */
+  /* 대신 줄서기 버튼 */
+  .r-queue-btn {
+    width: calc(100% - 36px);
+    margin: 0 18px 14px;
+    padding: 11px;
+    border-radius: 10px;
+    border: 1.5px solid var(--accent);
+    background: rgba(232,160,69,0.08);
+    color: var(--accent);
+    font-family: 'Jua', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    letter-spacing: 0.5px;
+  }
+
+  .r-queue-btn:hover {
+    background: rgba(232,160,69,0.18);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(232,160,69,0.2);
+  }
+
+  /* 모달 오버레이 */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 1000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .modal-overlay.hidden { display: none !important; }
+
+  /* 모달 시트 (아래서 올라오는 방식) */
+  .modal-sheet {
+    background: var(--surface);
+    border-radius: 24px 24px 0 0;
+    width: 100%;
+    max-width: 480px;
+    padding: 24px 20px 36px;
+    animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  .modal-handle {
+    width: 40px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+
+  .modal-title {
+    font-family: 'Jua', sans-serif;
+    font-size: 20px;
+    color: var(--text);
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  .modal-restaurant {
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+
+  .queue-option {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .queue-option:hover {
+    border-color: var(--accent);
+    background: rgba(232,160,69,0.07);
+  }
+
+  .queue-option-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .queue-option-info { flex: 1; }
+
+  .queue-option-title {
+    font-family: 'Jua', sans-serif;
+    font-size: 16px;
+    color: var(--text);
+    margin-bottom: 4px;
+    letter-spacing: 0.3px;
+  }
+
+  .queue-option-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .queue-option-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 20px;
+    margin-top: 6px;
+    display: inline-block;
+  }
+
+  .badge-o2o {
+    background: rgba(232,160,69,0.15);
+    color: var(--accent);
+    border: 1px solid rgba(232,160,69,0.3);
+  }
+
+  .badge-remote {
+    background: rgba(76,175,80,0.12);
+    color: #6fcf6f;
+    border: 1px solid rgba(76,175,80,0.25);
+  }
+
+  .modal-close {
+    width: 100%;
+    padding: 14px;
+    margin-top: 8px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .modal-close:hover { color: var(--text); border-color: var(--text-muted); }
+
+  /* 신청 완료 화면 */
+  .queue-confirm {
+    text-align: center;
+    padding: 20px 0 10px;
+  }
+
+  .queue-confirm-icon { font-size: 52px; margin-bottom: 14px; display: block; }
+  .queue-confirm-title {
+    font-family: 'Jua', sans-serif;
+    font-size: 20px;
+    color: var(--text);
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+  }
+  .queue-confirm-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 20px; }
+
+  /* 음식 사진 */
+  .r-photo {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    display: block;
+    background: var(--surface2);
+  }
+
+  .r-photo-wrap {
+    position: relative;
+    overflow: hidden;
+    height: 160px;
+    background: var(--surface2);
+  }
+
+  .r-photo-wrap img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease;
+  }
+
+  .r-photo-wrap:hover img { transform: scale(1.05); }
+
+  .r-photo-placeholder {
+    width: 100%;
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    background: var(--surface2);
+  }
+
+  /* 주문 조합 */
+  .r-order-combo {
+    margin: 0 18px 14px;
+    padding-left: calc(32px + 14px);
+  }
+
+  .r-order-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .r-order-items {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .r-order-item {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    font-size: 12px;
+    padding: 7px 10px;
+    background: var(--surface2);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    gap: 8px;
+  }
+
+  .r-order-item-name { color: var(--text); font-weight: 500; }
+  .r-order-item-price { color: var(--accent); font-weight: 700; font-size: 11px; }
+
+  .r-order-total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    padding: 7px 10px;
+    background: rgba(232,160,69,0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(232,160,69,0.25);
+    margin-top: 4px;
+  }
+
+  .r-order-total-label { color: var(--text-muted); font-weight: 700; }
+  .r-order-total-price { color: var(--accent); font-weight: 900; font-size: 13px; }
+
   .second-round-btn {
     width: 100%;
     padding: 16px;
@@ -697,15 +1005,62 @@
     display: block;
     font-size: 13px;
   }
+
+  /* 언어 전환 버튼 */
+  .lang-bar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-bottom: 8px;
+    margin-top: -8px;
+  }
+
+  .lang-btn {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Noto Sans KR', sans-serif;
+    letter-spacing: 0.3px;
+  }
+
+  .lang-btn.active {
+    border-color: var(--accent);
+    background: rgba(232,160,69,0.12);
+    color: var(--accent);
+  }
+
+  .lang-btn:hover { border-color: var(--accent); color: var(--accent); }
 </style>
 </head>
 <body>
 
 <div class="container">
+
+  <!-- 언어 전환 -->
+  <div class="lang-bar">
+    <button class="lang-btn active" id="langKR" onclick="setLang('ko')">🇰🇷 한국어</button>
+    <button class="lang-btn" id="langJP" onclick="setLang('ja')">🇯🇵 日本語</button>
+  </div>
+
   <header>
-    <span class="logo-icon">🍱</span>
-    <h1><span>맛있는</span> 직장인</h1>
-    <p class="subtitle">조건을 선택하면 주변 맛집을 찾아드려요</p>
+    <div class="logo-wrap">
+      <div class="logo-icon-combo">
+        <span class="logo-emoji-main">🍽️</span>
+        <span class="logo-emoji-sub">💼</span>
+      </div>
+    </div>
+    <div class="logo-title">
+      <span class="word-mat">맛있는</span>
+      <span class="dot-sep"></span>
+      <span class="word-jik">직장인</span>
+    </div>
+    <p class="subtitle">조건을 선택하면 주변 맛집을 찾아드려요 🍴</p>
   </header>
 
   <!-- Location Bar (always visible) -->
@@ -765,14 +1120,14 @@
       <div class="card-label">Step 3</div>
       <div class="card-title">누구와 함께하나요?</div>
       <div class="options-grid cols-2">
-        <button class="opt-btn" onclick="select('companion','친구','👫')" id="companion-친구">
-          <span class="icon">👫</span>친구·가족
+        <button class="opt-btn" onclick="select('companion','직장동료','💼')" id="companion-직장동료">
+          <span class="icon">💼</span>직장 동료
         </button>
         <button class="opt-btn" onclick="select('companion','고객사','🤝')" id="companion-고객사">
           <span class="icon">🤝</span>고객사·거래처
         </button>
-        <button class="opt-btn" onclick="select('companion','직장동료','💼')" id="companion-직장동료">
-          <span class="icon">💼</span>직장 동료
+        <button class="opt-btn" onclick="select('companion','친구','👫')" id="companion-친구">
+          <span class="icon">👫</span>친구·가족
         </button>
         <button class="opt-btn" onclick="select('companion','혼자','🙋')" id="companion-혼자">
           <span class="icon">🙋</span>혼밥
@@ -807,8 +1162,8 @@
   <!-- LOADING -->
   <div id="loadingSection" class="hidden">
     <div class="loading-screen">
-      <span class="loading-bowl">🍲</span>
-      <div class="loading-text">맛집을 찾고 있어요</div>
+      <span class="loading-bowl">🍽️</span>
+      <div class="loading-text">오늘의 맛집 TOP 3를 추천합니다</div>
       <div class="loading-sub" id="loadingMsg">위치 정보를 가져오는 중...</div>
       <div class="loading-dots">
         <span></span><span></span><span></span>
@@ -819,7 +1174,7 @@
   <!-- RESULTS -->
   <div id="resultsSection" class="hidden">
     <div class="results-header">
-      <h2 id="resultsTitle">🎉 추천 맛집이에요!</h2>
+      <h2 id="resultsTitle">🍽️ 오늘의 맛집 TOP 3에요!</h2>
       <p id="resultsSub">선택하신 조건에 맞는 주변 맛집이에요</p>
       <div class="tag-summary" id="tagSummary"></div>
     </div>
@@ -847,6 +1202,34 @@
     </button>
   </div>
 
+  <!-- 대신 줄서기 모달 -->
+  <div class="modal-overlay hidden" id="queueModal" onclick="closeQueueModal(event)">
+    <div class="modal-sheet" id="queueSheet">
+      <div class="modal-handle"></div>
+      <div id="queueContent">
+        <div class="modal-title">🙋 대신 줄서기</div>
+        <div class="modal-restaurant" id="queueRestaurantName"></div>
+        <div class="queue-option" onclick="selectQueueType('o2o')">
+          <span class="queue-option-icon">🏃</span>
+          <div class="queue-option-info">
+            <div class="queue-option-title">사람이 직접 대신 줄서기</div>
+            <div class="queue-option-desc">저희 스태프가 식당에 직접 방문해서 자리를 잡아드려요. 도착 전에 알림을 보내드립니다.</div>
+            <span class="queue-option-badge badge-o2o">O2O 서비스 · 유료</span>
+          </div>
+        </div>
+        <div class="queue-option" onclick="selectQueueType('remote')">
+          <span class="queue-option-icon">📱</span>
+          <div class="queue-option-info">
+            <div class="queue-option-title">앱으로 원격 웨이팅 등록</div>
+            <div class="queue-option-desc">식당의 웨이팅 시스템에 원격으로 등록해드려요. 순서가 되면 바로 알림을 받으세요.</div>
+            <span class="queue-option-badge badge-remote">원격 등록 · 무료</span>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeQueueModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -858,8 +1241,161 @@
     lat: null,
     lng: null,
     locationName: null,
-    locationDetail: null
+    locationDetail: null,
+    lang: 'ko'
   };
+
+  // ── 언어 데이터
+  const T = {
+    ko: {
+      subtitle: '조건을 선택하면 주변 맛집을 찾아드려요 🍴',
+      locLoading: '위치 확인 중...',
+      locGps: 'GPS 신호를 가져오는 중이에요',
+      step1label: 'Step 1', step1title: '어떤 식사인가요?',
+      morning: '아침', lunch: '점심', dinner: '저녁',
+      step2label: 'Step 2', step2title: '몇 명이서 드시나요?', person: '명',
+      step3label: 'Step 3', step3title: '누구와 함께하나요?',
+      coworker: '직장 동료', client: '고객사·거래처', friend: '친구·가족', solo: '혼밥',
+      step4label: 'Step 4', step4title: '예산은 어느 정도인가요?', perPerson: '(1인 기준)',
+      low: '저가', lowSub: '~1만원', mid: '중가', midSub: '1~3만원', high: '고가', highSub: '3만원~',
+      searchBtn: '🔍 주변 맛집 찾기',
+      loadingTitle: '오늘의 맛집 TOP 3를 추천합니다',
+      loadingMsg: '위치 정보를 가져오는 중...',
+      resultsTitle: '🍽️ 오늘의 맛집 TOP 3에요!',
+      resultsSub: '주변 맛집 3곳',
+      mapBtn: '🗺️ 지도 보기', searchMoreBtn: '🔍 더 알아보기',
+      queueBtn: '🙋 대신 줄서기 신청',
+      queueTitle: '🙋 대신 줄서기',
+      queueO2OTitle: '사람이 직접 대신 줄서기',
+      queueO2ODesc: '저희 스태프가 식당에 직접 방문해서 자리를 잡아드려요. 도착 전에 알림을 보내드립니다.',
+      queueO2OBadge: 'O2O 서비스 · 유료',
+      queueRemoteTitle: '앱으로 원격 웨이팅 등록',
+      queueRemoteDesc: '식당의 웨이팅 시스템에 원격으로 등록해드려요. 순서가 되면 바로 알림을 받으세요.',
+      queueRemoteBadge: '원격 등록 · 무료',
+      queueClose: '닫기',
+      queueConfirmO2O: '줄서기 신청 완료!',
+      queueConfirmRemote: '웨이팅 등록 완료!',
+      queueConfirmO2ODesc: '스태프가 곧 출발합니다 🚀<br><br>자리가 확보되면 알림을 보내드릴게요!',
+      queueConfirmRemoteDesc: '웨이팅 시스템에 등록됐어요 ✅<br><br>순서가 가까워지면 알림을 보내드릴게요!',
+      queueWaitTime: '⏱ 예상 대기 :',
+      queueFee: '💰 서비스 요금 :',
+      queueFeeVal: '2,000원',
+      queueCurrentWait: '⏱ 현재 대기 :',
+      queueNotify: '📲 알림 :',
+      queueNotifyVal: '문자로 발송',
+      confirmBtn: '확인',
+      secondRoundBtn: '🍻 식사 끝! 2차 맛집도 추천받기',
+      secondRoundTitle: '2차 맛집 추천',
+      secondRoundSub: '식사 후 이어가기 좋은 곳',
+      resetBtn: '↩ 다시 검색하기',
+      aiResultsTitle: '🍽️ 오늘의 맛집 TOP 3에요!',
+      aiSecondTitle: '🍻 2차 추천이에요!',
+      aiSecondSub: '식사 후 이어가기 좋은 곳',
+    },
+    ja: {
+      subtitle: '条件を選ぶと近くのお店をご提案します 🍴',
+      locLoading: '位置情報を確認中...',
+      locGps: 'GPS信号を取得しています',
+      step1label: 'Step 1', step1title: '食事の種類は？',
+      morning: '朝食', lunch: '昼食', dinner: '夕食',
+      step2label: 'Step 2', step2title: '何名様ですか？', person: '名',
+      step3label: 'Step 3', step3title: '誰と一緒ですか？',
+      coworker: '同僚', client: '取引先・お客様', friend: '友人・家族', solo: '一人飯',
+      step4label: 'Step 4', step4title: '予算はどのくらいですか？', perPerson: '(1人あたり)',
+      low: '低価格', lowSub: '〜1万W', mid: '中価格', midSub: '1〜3万W', high: '高価格', highSub: '3万W〜',
+      searchBtn: '🔍 近くのお店を探す',
+      loadingTitle: '本日のおすすめ TOP 3 をご提案します',
+      loadingMsg: '位置情報を取得中...',
+      resultsTitle: '🍽️ 本日のおすすめ TOP 3！',
+      resultsSub: '近くのお店 3選',
+      mapBtn: '🗺️ 地図を見る', searchMoreBtn: '🔍 もっと見る',
+      queueBtn: '🙋 代わりに並びます',
+      queueTitle: '🙋 代わり並びサービス',
+      queueO2OTitle: 'スタッフが直接並びます',
+      queueO2ODesc: '専任スタッフがお店に直接行って席を確保します。準備ができたらお知らせします。',
+      queueO2OBadge: 'O2Oサービス · 有料',
+      queueRemoteTitle: 'アプリでウェイティング登録',
+      queueRemoteDesc: 'お店のウェイティングシステムにリモートで登録します。順番が来たらすぐ通知します。',
+      queueRemoteBadge: 'リモート登録 · 無料',
+      queueClose: '閉じる',
+      queueConfirmO2O: '並び申し込み完了！',
+      queueConfirmRemote: 'ウェイティング登録完了！',
+      queueConfirmO2ODesc: 'スタッフがまもなく出発します 🚀<br><br>席が確保されたらお知らせします！',
+      queueConfirmRemoteDesc: 'ウェイティングシステムに登録しました ✅<br><br>順番が近づいたらお知らせします！',
+      queueWaitTime: '⏱ 予想待ち時間 :',
+      queueFee: '💰 サービス料金 :',
+      queueFeeVal: '200円相当',
+      queueCurrentWait: '⏱ 現在の待ち時間 :',
+      queueNotify: '📲 通知方法 :',
+      queueNotifyVal: 'SMS送信',
+      confirmBtn: '確認',
+      secondRoundBtn: '🍻 食後の2軒目もおすすめ！',
+      secondRoundTitle: '2軒目おすすめ',
+      secondRoundSub: '食後に続けて行けるお店',
+      resetBtn: '↩ 最初からやり直す',
+      aiResultsTitle: '🍽️ 本日のおすすめ TOP 3！',
+      aiSecondTitle: '🍻 2軒目のおすすめです！',
+      aiSecondSub: '食後に続けて行けるお店',
+    }
+  };
+
+  function t(key) { return T[state.lang][key] || T['ko'][key] || key; }
+
+  function setLang(lang) {
+    state.lang = lang;
+    document.getElementById('langKR').classList.toggle('active', lang === 'ko');
+    document.getElementById('langJP').classList.toggle('active', lang === 'ja');
+
+    // 자막
+    document.querySelector('.subtitle').textContent = t('subtitle');
+
+    // 위치바
+    if (document.getElementById('locNameTop').textContent === '위치 확인 중...' ||
+        document.getElementById('locNameTop').textContent === '位置情報を確認中...') {
+      document.getElementById('locNameTop').textContent = t('locLoading');
+      document.getElementById('locDetailTop').textContent = t('locGps');
+    }
+
+    // Step 라벨/타이틀
+    document.querySelector('#step0 .card-label').textContent = t('step1label');
+    document.querySelector('#step0 .card-title').textContent = t('step1title');
+    document.querySelector('#meal-아침').innerHTML = `<span class="icon">🌅</span>${t('morning')}`;
+    document.querySelector('#meal-점심').innerHTML = `<span class="icon">☀️</span>${t('lunch')}`;
+    document.querySelector('#meal-저녁').innerHTML = `<span class="icon">🌙</span>${t('dinner')}`;
+
+    document.querySelector('#step1 .card-label').textContent = t('step2label');
+    document.querySelector('#step1 .card-title').textContent = t('step2title');
+    document.querySelector('.num-label').textContent = t('person');
+
+    document.querySelector('#step2 .card-label').textContent = t('step3label');
+    document.querySelector('#step2 .card-title').textContent = t('step3title');
+    document.querySelector('#companion-직장동료').innerHTML = `<span class="icon">💼</span>${t('coworker')}`;
+    document.querySelector('#companion-고객사').innerHTML = `<span class="icon">🤝</span>${t('client')}`;
+    document.querySelector('#companion-친구').innerHTML = `<span class="icon">👫</span>${t('friend')}`;
+    document.querySelector('#companion-혼자').innerHTML = `<span class="icon">🙋</span>${t('solo')}`;
+
+    document.querySelector('#step3 .card-label').textContent = t('step4label');
+    document.querySelector('#step3 .card-title').innerHTML = `${t('step4title')} <span style="font-size:12px;color:var(--text-muted)">${t('perPerson')}</span>`;
+    document.querySelector('#price-저가').innerHTML = `<span class="icon">💰</span>${t('low')}<br><small style="font-size:10px;color:var(--text-muted)">${t('lowSub')}</small>`;
+    document.querySelector('#price-중가').innerHTML = `<span class="icon">💰💰</span>${t('mid')}<br><small style="font-size:10px;color:var(--text-muted)">${t('midSub')}</small>`;
+    document.querySelector('#price-고가').innerHTML = `<span class="icon">💰💰💰</span>${t('high')}<br><small style="font-size:10px;color:var(--text-muted)">${t('highSub')}</small>`;
+
+    // 검색 버튼
+    document.getElementById('searchBtn').textContent = t('searchBtn');
+
+    // 로딩
+    document.querySelector('.loading-text').textContent = t('loadingTitle');
+
+    // 결과 (이미 표시된 경우)
+    const titleEl = document.getElementById('resultsTitle');
+    if (titleEl) titleEl.textContent = t('aiResultsTitle');
+
+    // 2차 버튼
+    document.getElementById('secondRoundBtn').textContent = t('secondRoundBtn');
+
+    // 다시 검색 버튼
+    document.querySelector('.reset-btn').textContent = t('resetBtn');
+  }
 
   // Get location on page load
   window.addEventListener('load', () => {
@@ -1091,6 +1627,10 @@
       : '';
     const priceRange = state.price === '저가' ? '5,000~12,000원'
       : state.price === '중가' ? '13,000~35,000원' : '35,000원 이상';
+    const isJa = state.lang === 'ja';
+    const langNote = isJa
+      ? '\n\n⚠️ 응답 언어: 반드시 모든 텍스트를 일본어(日本語)로 작성하세요. description, recommend, tags, parkingNote 모두 일본어로.'
+      : '';
 
     if (round === 2) {
       return `한국 현지 맛집 추천 전문가입니다.
@@ -1105,11 +1645,11 @@ ${excludeStr}
 1인당 예산: ${priceRange} 수준 (2차이므로 음료·안주 기준)
 조건: ${algo.groupConstraint}
 
-식당 이름은 반드시 실제 한국 상호명처럼 자연스럽게 (예: "달빛포차", "사케야", "루나바").
-지역명 절대 붙이지 말 것. 정확히 3곳.
+식당 이름은 반드시 실제 한국 상호명처럼 자연스럽게.
+지역명 절대 붙이지 말 것. 정확히 3곳.${langNote}
 
 JSON만 출력:
-[{"name":"","category":"","rating":4.3,"distance":"도보 5분","pricePerPerson":"15,000원","parking":false,"parkingNote":"주차 불가 (대중교통 추천)","description":"한 줄 소개","tags":["태그1","태그2","태그3"],"recommend":"${state.companion}에게 추천 이유"}]`;
+[{"name":"","category":"","rating":4.3,"distance":"도보 5분","pricePerPerson":"15,000원","parking":false,"parkingNote":"주차 불가","description":"한 줄 소개","tags":["태그1","태그2","태그3"],"recommend":"추천 이유"}]`;
     }
 
     return `한국 현지 맛집 추천 전문가입니다.
@@ -1127,12 +1667,15 @@ JSON만 출력:
 - 위 장르 우선순위를 반영해 서로 다른 음식 종류 3곳 추천
 - 분위기 키워드에 맞는 곳 선택
 - 인원·시간 조건 충족하는 곳만 포함
-- 식당 이름은 실제 한국 상호명처럼 자연스럽게 (예: "미가", "온기정", "별미옥", "청담면옥")
+- 식당 이름은 실제 한국 상호명처럼 자연스럽게 (예: "미가", "온기정", "별미옥")
 - 지역명·동네명을 상호에 붙이지 말 것
-- 정확히 3곳만
+- 정확히 3곳만${langNote}
+- 반드시 각 식당마다 orderCombo 배열 포함 (${state.count}명 기준 메뉴 2~3개, 각 단가·수량·총가격 포함)
+- 반드시 각 식당마다 photoKeyword 포함 (영어로 된 음식 이미지 검색어, 예: "korean BBQ beef grilled")
+- 반드시 signature 필드: 이 식당의 대표 시그니처 메뉴 이름 (한 가지)
 
-JSON만 출력:
-[{"name":"","category":"","rating":4.5,"distance":"도보 5분","pricePerPerson":"12,000원","parking":true,"parkingNote":"건물 내 주차 2시간 무료","description":"한 줄 소개","tags":["태그1","태그2","태그3"],"recommend":"${state.companion}에게 추천하는 이유"}]`;
+JSON만 출력 (다른 텍스트 절대 금지):
+[{"name":"미가","category":"고기구이","rating":4.5,"distance":"도보 5분","pricePerPerson":"25,000원","parking":true,"parkingNote":"건물 내 주차 2시간 무료","description":"한 줄 소개","tags":["태그1","태그2"],"recommend":"추천 이유","signature":"한우 꽃등심","photoKeyword":"korean beef BBQ grilled meat","orderCombo":[{"menu":"한우 등심 200g","unitPrice":"32,000원","qty":${state.count},"totalPrice":"${32000 * state.count}원","isSignature":true},{"menu":"된장찌개","unitPrice":"3,000원","qty":${state.count},"totalPrice":"${3000 * state.count}원","isSignature":false},{"menu":"공기밥","unitPrice":"1,000원","qty":${state.count},"totalPrice":"${1000 * state.count}원","isSignature":false}]}]`;
   }
 
   async function fetchRecommendations(round = 1) {
@@ -1144,7 +1687,7 @@ JSON만 출력:
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
-          max_tokens: 1200,
+          max_tokens: 2000,
           messages: [{ role: 'user', content: buildPrompt(round) }]
         })
       });
@@ -1162,29 +1705,35 @@ JSON만 출력:
   }
 
   function getFallbackData(round = 1) {
+    const n = state.count;
+    const combo = (items) => items.map((it, idx) => ({
+      menu: it.menu, unitPrice: it.unit, qty: it.qty || n,
+      totalPrice: `${((parseInt(it.unit.replace(/[^0-9]/g,'')) || 0) * (it.qty || n)).toLocaleString()}원`,
+      isSignature: idx === 0
+    }));
     const byPrice = {
       '저가': [
-        { name: '온기정', category: '한식', rating: 4.3, distance: '도보 3분', pricePerPerson: '8,000원', parking: false, parkingNote: '주차 불가 (도보 이동 추천)', description: '진한 육수의 손칼국수', tags: ['칼국수', '만두', '점심특선'], recommend: `${state.companion}과 부담 없이 즐기기 좋아요` },
-        { name: '수복식당', category: '한식', rating: 4.1, distance: '도보 5분', pricePerPerson: '9,000원', parking: false, parkingNote: '주차 불가 (도보 이동 추천)', description: '40년 전통 순대국밥', tags: ['국밥', '순대', '24시간'], recommend: '든든하고 빠르게 식사 가능해요' },
-        { name: '청년돈까스', category: '경양식', rating: 4.4, distance: '도보 7분', pricePerPerson: '10,000원', parking: true, parkingNote: '건물 앞 공영주차장 이용 가능', description: '바삭한 수제 돈까스', tags: ['수제돈까스', '치즈', '세트메뉴'], recommend: '양이 많고 가성비 최고예요' }
+        { name: '온기정', category: '한식', rating: 4.3, distance: '도보 3분', pricePerPerson: '8,000원', parking: false, parkingNote: '주차 불가', description: '진한 육수의 손칼국수', tags: ['칼국수', '만두', '점심특선'], recommend: `${state.companion}과 부담 없이 즐기기 좋아요`, photoKeyword: 'korean kalguksu noodle soup', signature: '손칼국수', orderCombo: combo([{menu:'손칼국수', unit:'6,000원'},{menu:'만두', unit:'4,000원'},{menu:'공기밥', unit:'1,000원'}]) },
+        { name: '수복식당', category: '한식', rating: 4.1, distance: '도보 5분', pricePerPerson: '9,000원', parking: false, parkingNote: '주차 불가', description: '40년 전통 순대국밥', tags: ['국밥', '순대', '24시간'], recommend: '든든하고 빠르게 식사 가능해요', photoKeyword: 'korean sundae soup gukbap', signature: '순대국밥', orderCombo: combo([{menu:'순대국밥', unit:'8,000원'},{menu:'수육', unit:'12,000원', qty:1},{menu:'소주', unit:'4,000원'}]) },
+        { name: '청년돈까스', category: '경양식', rating: 4.4, distance: '도보 7분', pricePerPerson: '10,000원', parking: true, parkingNote: '건물 앞 공영주차장', description: '바삭한 수제 돈까스', tags: ['수제돈까스', '치즈', '세트메뉴'], recommend: '양이 많고 가성비 최고예요', photoKeyword: 'korean pork cutlet donkatsu crispy', signature: '수제 돈까스', orderCombo: combo([{menu:'수제 돈까스', unit:'9,000원'},{menu:'치즈 돈까스', unit:'10,000원'},{menu:'음료', unit:'2,000원'}]) }
       ],
       '중가': [
-        { name: '대풍숯불', category: '고기집', rating: 4.6, distance: '도보 8분', pricePerPerson: '25,000원', parking: true, parkingNote: '건물 지하 주차 가능 (식사 시 1시간 무료)', description: '참숯으로 굽는 국내산 한우', tags: ['한우', '참숯', '포장가능'], recommend: `${state.companion}과 특별한 식사에 어울려요` },
-        { name: '스시 미도리', category: '일식', rating: 4.7, distance: '도보 10분', pricePerPerson: '28,000원', parking: false, parkingNote: '주차 불가 (인근 유료주차장 이용)', description: '점심 특가 스시 코스', tags: ['스시', '오마카세', '점심특가'], recommend: '품격 있는 식사 자리로 최고예요' },
-        { name: '별미해물탕', category: '해물', rating: 4.5, distance: '도보 6분', pricePerPerson: '20,000원', parking: true, parkingNote: '전용 주차장 보유 (무료)', description: '신선한 해산물 가득한 해물탕', tags: ['해물탕', '낙지', '새우'], recommend: '단체 식사로 분위기 좋아요' }
+        { name: '대풍숯불', category: '고기집', rating: 4.6, distance: '도보 8분', pricePerPerson: '25,000원', parking: true, parkingNote: '지하 주차 1시간 무료', description: '참숯으로 굽는 국내산 한우', tags: ['한우', '참숯', '포장가능'], recommend: `${state.companion}과 특별한 식사에 어울려요`, photoKeyword: 'korean beef BBQ grilled galbi', signature: '한우 꽃등심', orderCombo: combo([{menu:'한우 등심 200g', unit:'32,000원'},{menu:'된장찌개', unit:'3,000원'},{menu:'공기밥', unit:'1,000원'}]) },
+        { name: '스시 미도리', category: '일식', rating: 4.7, distance: '도보 10분', pricePerPerson: '28,000원', parking: false, parkingNote: '주차 불가 (인근 유료)', description: '점심 특가 스시 코스', tags: ['스시', '오마카세', '점심특가'], recommend: '품격 있는 식사 자리로 최고예요', photoKeyword: 'japanese sushi omakase plate', signature: '점심 오마카세 코스', orderCombo: combo([{menu:'점심 오마카세', unit:'25,000원'},{menu:'미소국', unit:'2,000원'},{menu:'음료', unit:'3,000원'}]) },
+        { name: '별미해물탕', category: '해물', rating: 4.5, distance: '도보 6분', pricePerPerson: '20,000원', parking: true, parkingNote: '전용 주차장 무료', description: '신선한 해산물 가득한 해물탕', tags: ['해물탕', '낙지', '새우'], recommend: '단체 식사로 분위기 좋아요', photoKeyword: 'korean seafood haemultang spicy stew', signature: '특대 해물탕', orderCombo: combo([{menu:'해물탕 (대)', unit:'45,000원', qty:1},{menu:'볶음밥', unit:'3,000원'},{menu:'소주', unit:'4,000원'}]) }
       ],
       '고가': [
-        { name: '금강산한정식', category: '한식', rating: 4.8, distance: '도보 15분', pricePerPerson: '55,000원', parking: true, parkingNote: '전용 발렛파킹 가능', description: '전통 방식 한정식 코스요리', tags: ['한정식', '코스', '프라이빗룸'], recommend: `${state.companion}에게 깊은 인상을 남길 수 있어요` },
-        { name: '그릴 에이스', category: '양식', rating: 4.7, distance: '택시 5분', pricePerPerson: '80,000원', parking: true, parkingNote: '건물 지하 주차 2시간 무료', description: '드라이에이징 프리미엄 스테이크', tags: ['스테이크', '와인페어링', '프라이빗'], recommend: '격식 있는 비즈니스 자리에 완벽해요' },
-        { name: '하루카', category: '일식', rating: 4.9, distance: '택시 8분', pricePerPerson: '120,000원', parking: false, parkingNote: '주차 불가 (발렛 대행 이용 가능)', description: '제철 재료로 구성된 오마카세', tags: ['오마카세', '제철재료', '파인다이닝'], recommend: '특별한 자리에 잊지 못할 경험이에요' }
+        { name: '금강산한정식', category: '한식', rating: 4.8, distance: '도보 15분', pricePerPerson: '55,000원', parking: true, parkingNote: '전용 발렛파킹', description: '전통 방식 한정식 코스요리', tags: ['한정식', '코스', '프라이빗룸'], recommend: `${state.companion}에게 깊은 인상을 남길 수 있어요`, photoKeyword: 'korean hanjeongsik traditional course meal', signature: '한정식 코스 A', orderCombo: combo([{menu:'한정식 코스 A', unit:'55,000원'},{menu:'전통주', unit:'35,000원', qty:1},{menu:'후식', unit:'5,000원'}]) },
+        { name: '그릴 에이스', category: '양식', rating: 4.7, distance: '택시 5분', pricePerPerson: '80,000원', parking: true, parkingNote: '지하 주차 2시간 무료', description: '드라이에이징 프리미엄 스테이크', tags: ['스테이크', '와인페어링', '프라이빗'], recommend: '격식 있는 비즈니스 자리에 완벽해요', photoKeyword: 'premium dry aged steak fine dining', signature: '드라이에이징 ribeye', orderCombo: combo([{menu:'드라이에이징 스테이크', unit:'75,000원'},{menu:'시저 샐러드', unit:'15,000원'},{menu:'와인 (1병)', unit:'65,000원', qty:1}]) },
+        { name: '하루카', category: '일식', rating: 4.9, distance: '택시 8분', pricePerPerson: '120,000원', parking: false, parkingNote: '발렛 대행 이용 가능', description: '제철 재료로 구성된 오마카세', tags: ['오마카세', '제철재료', '파인다이닝'], recommend: '특별한 자리에 잊지 못할 경험이에요', photoKeyword: 'japanese omakase fine dining sushi course', signature: '오마카세 풀코스', orderCombo: combo([{menu:'오마카세 코스', unit:'120,000원'},{menu:'사케 페어링', unit:'30,000원'},{menu:'디저트', unit:'10,000원'}]) }
       ]
     };
     const base = byPrice[state.price] || byPrice['중가'];
     if (round === 2) {
       return [
-        { name: '달빛포차', category: '술집·포차', rating: 4.3, distance: '도보 5분', pricePerPerson: '15,000원', parking: false, parkingNote: '주차 불가 (대중교통 이용 추천)', description: '분위기 좋은 감성 포차', tags: ['포차', '2차', '안주'], recommend: '가볍게 2차로 이어가기 딱 좋아요' },
-        { name: '사케야', category: '일식주점', rating: 4.5, distance: '도보 8분', pricePerPerson: '20,000원', parking: false, parkingNote: '주차 불가 (인근 유료주차장 이용)', description: '일본식 분위기의 이자카야', tags: ['이자카야', '사케', '꼬치'], recommend: '2차로 이어가기 완벽해요' },
-        { name: '루나 루프탑', category: '바·라운지', rating: 4.6, distance: '도보 10분', pricePerPerson: '25,000원', parking: true, parkingNote: '건물 주차 가능 (유료)', description: '야경과 함께하는 루프탑 바', tags: ['루프탑', '칵테일', '야경'], recommend: '분위기 있는 2차 자리로 최고예요' }
+        { name: '달빛포차', category: '술집·포차', rating: 4.3, distance: '도보 5분', pricePerPerson: '15,000원', parking: false, parkingNote: '주차 불가', description: '분위기 좋은 감성 포차', tags: ['포차', '2차', '안주'], recommend: '가볍게 2차로 이어가기 딱 좋아요', photoKeyword: 'korean pojangmacha street bar night', signature: '모둠 안주', orderCombo: combo([{menu:'모둠 안주', unit:'12,000원', qty:1},{menu:'소주', unit:'4,000원'},{menu:'맥주', unit:'4,000원'}]) },
+        { name: '사케야', category: '일식주점', rating: 4.5, distance: '도보 8분', pricePerPerson: '20,000원', parking: false, parkingNote: '주차 불가', description: '일본식 분위기의 이자카야', tags: ['이자카야', '사케', '꼬치'], recommend: '2차로 이어가기 완벽해요', photoKeyword: 'japanese izakaya yakitori skewer sake', signature: '야키토리 모둠', orderCombo: combo([{menu:'야키토리 모둠', unit:'15,000원', qty:1},{menu:'사케 (1홉)', unit:'8,000원'},{menu:'에다마메', unit:'4,000원', qty:1}]) },
+        { name: '루나 루프탑', category: '바·라운지', rating: 4.6, distance: '도보 10분', pricePerPerson: '25,000원', parking: true, parkingNote: '건물 주차 유료', description: '야경과 함께하는 루프탑 바', tags: ['루프탑', '칵테일', '야경'], recommend: '분위기 있는 2차 자리로 최고예요', photoKeyword: 'rooftop bar cocktail city night view', signature: '시그니처 칵테일', orderCombo: combo([{menu:'시그니처 칵테일', unit:'15,000원'},{menu:'안주 플레이트', unit:'20,000원', qty:1}]) }
       ];
     }
     return base;
@@ -1207,16 +1756,92 @@ JSON만 출력:
       ).join('');
       document.getElementById('locationText').textContent = state.locationName || '현재 위치 기준';
       document.getElementById('locationSub').textContent = state.locationDetail || '주변 도보 10분 이내';
-      document.getElementById('resultsTitle').textContent = '🎉 추천 맛집이에요!';
-      document.getElementById('resultsSub').textContent = `${state.locationName || '현재 위치'} 주변 맛집 3곳`;
+      document.getElementById('resultsTitle').textContent = t('aiResultsTitle');
+      document.getElementById('resultsSub').textContent = `${state.locationName || (state.lang === 'ja' ? '現在地' : '현재 위치')} ${t('resultsSub')}`;
     } else {
-      document.getElementById('resultsTitle').textContent = '🍻 2차 추천이에요!';
-      document.getElementById('resultsSub').textContent = '식사 후 이어가기 좋은 곳';
+      document.getElementById('resultsTitle').textContent = t('aiSecondTitle');
+      document.getElementById('resultsSub').textContent = t('aiSecondSub');
     }
 
     const list = document.getElementById('restaurantList');
-    const cards = restaurants.slice(0, 3).map((r, i) => `
+    const cards = restaurants.slice(0, 3).map((r, i) => {
+      // 카테고리별 기본 이모지 (사진 로딩 실패시)
+      const catEmoji = {
+        '한식': '🍲', '고기구이': '🥩', '고기집': '🥩', '일식': '🍱', '일식코스': '🍣',
+        '중식': '🥢', '분식': '🍜', '해물': '🦐', '양식': '🍝', '파인다이닝': '🍽️',
+        '한정식': '🍱', '경양식': '🥩', '술집·포차': '🍺', '일식주점': '🍶', '바·라운지': '🍸'
+      }[r.category] || '🍽️';
+
+      // 주문 조합 계산
+      const comboArr = Array.isArray(r.orderCombo) ? r.orderCombo : [];
+      const comboItems = comboArr.map(item => {
+        const sigBadge = item.isSignature
+          ? `<span style="font-size:10px;background:rgba(232,160,69,0.2);color:var(--accent);border:1px solid rgba(232,160,69,0.4);border-radius:4px;padding:1px 5px;margin-left:5px;font-weight:700;">★ 시그니처</span>`
+          : '';
+        const unitStr = item.unitPrice ? `<span style="font-size:11px;color:var(--text-muted);">${item.unitPrice} × ${item.qty || 1}</span>` : '';
+        return `
+        <div class="r-order-item">
+          <div style="flex:1;">
+            <span class="r-order-item-name">${item.menu || ''}${sigBadge}</span>
+            <div style="margin-top:2px;">${unitStr}</div>
+          </div>
+          <span class="r-order-item-price">${item.totalPrice || item.price || ''}</span>
+        </div>`;
+      }).join('');
+
+      // 총액 계산
+      let totalAmt = 0;
+      comboArr.forEach(item => {
+        const src = item.totalPrice || item.price || '';
+        const num = parseInt(src.replace(/[^0-9]/g, ''));
+        if (!isNaN(num)) totalAmt += num;
+      });
+      const totalStr = totalAmt > 0 ? totalAmt.toLocaleString() + '원' : '';
+      const totalRow = totalStr ? `
+        <div class="r-order-total">
+          <span class="r-order-total-label">💰 ${state.count}명 합계</span>
+          <span class="r-order-total-price">≈ ${totalStr}</span>
+        </div>` : '';
+
+      // 시그니처 메뉴 배지 (카드 상단)
+      const sigMenuBadge = r.signature
+        ? `<div style="position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,0.65);color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;backdrop-filter:blur(4px);">★ ${r.signature}</div>`
+        : '';
+
+      // 카테고리별 정확히 매핑된 음식 사진 (Wikimedia Commons - 공개 도메인)
+      const foodPhotos = {
+        '한식':       'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Koreafood.jpg/640px-Koreafood.jpg',
+        '고기집':     'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Korean.food-Bulgogi-01.jpg/640px-Korean.food-Bulgogi-01.jpg',
+        '고기구이':   'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Korean.food-Bulgogi-01.jpg/640px-Korean.food-Bulgogi-01.jpg',
+        '일식':       'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Sushi_platter.jpg/640px-Sushi_platter.jpg',
+        '일식코스':   'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Sushi_platter.jpg/640px-Sushi_platter.jpg',
+        '중식':       'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Fried_rice_-_prepared.jpg/640px-Fried_rice_-_prepared.jpg',
+        '분식':       'https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Tteok-bokki_with_fish_cake.jpg/640px-Tteok-bokki_with_fish_cake.jpg',
+        '해물':       'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Korean_seafood_01.jpg/640px-Korean_seafood_01.jpg',
+        '양식':       'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Filet_mignon.jpg/640px-Filet_mignon.jpg',
+        '파인다이닝': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Filet_mignon.jpg/640px-Filet_mignon.jpg',
+        '한정식':     'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Koreafood.jpg/640px-Koreafood.jpg',
+        '경양식':     'https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Pork_tonkatsu.jpg/640px-Pork_tonkatsu.jpg',
+        '국밥':       'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Haejang-guk.jpg/640px-Haejang-guk.jpg',
+        '한식백반':   'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Koreafood.jpg/640px-Koreafood.jpg',
+        '라멘':       'https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Shoyu_ramen%2C_at_Kasukabe_Station_%282014.05.05%29_1.jpg/640px-Shoyu_ramen%2C_at_Kasukabe_Station_%282014.05.05%29_1.jpg',
+        '덮밥':       'https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Oyakodon.jpg/640px-Oyakodon.jpg',
+        '냉면':       'https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Korean.food-Naengmyeon-01.jpg/640px-Korean.food-Naengmyeon-01.jpg',
+        '술집·포차':  'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Korean_fried_chicken_2.jpg/640px-Korean_fried_chicken_2.jpg',
+        '일식주점':   'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Yakitori_by_tontantravel.jpg/640px-Yakitori_by_tontantravel.jpg',
+        '바·라운지':  'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Long_Island_Iced_Tea_Cocktail.jpg/480px-Long_Island_Iced_Tea_Cocktail.jpg',
+      };
+      const finalPhotoUrl = foodPhotos[r.category]
+        || 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Koreafood.jpg/640px-Koreafood.jpg';
+
+      return `
       <div class="restaurant-card" style="--i: ${i}">
+        <div class="r-photo-wrap" style="position:relative;">
+          <img src="${finalPhotoUrl}" alt="${r.category}" loading="lazy" style="display:block;"
+            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="r-photo-placeholder" style="display:none">${catEmoji}</div>
+          ${sigMenuBadge}
+        </div>
         <div class="r-header">
           <div class="r-rank ${i === 0 ? 'top' : ''}">${i + 1}</div>
           <div class="r-info">
@@ -1235,19 +1860,29 @@ JSON만 출력:
             ${r.parking ? '🅿️' : '🚫'} ${r.parkingNote || (r.parking ? '주차 가능' : '주차 불가')}
           </div>
           <div class="r-tags">
-            ${(r.tags || []).map(t => `<span class="r-tag">#${t}</span>`).join('')}
+            ${(r.tags || []).map(tag => `<span class="r-tag">#${tag}</span>`).join('')}
           </div>
         </div>
+        ${comboArr.length > 0 ? `
+        <div class="r-order-combo">
+          <div class="r-order-title">🧾 추천 주문 조합 (${state.count}명)</div>
+          <div class="r-order-items">
+            ${comboItems}
+            ${totalRow}
+          </div>
+        </div>` : ''}
         <div class="r-footer">
-          <button class="r-action" onclick="openMap('${r.name}')">🗺️ 지도 보기</button>
-          <button class="r-action" onclick="searchMore('${r.name}')">🔍 더 알아보기</button>
+          <button class="r-action" onclick="openMap('${r.name}', '${r.category}')">${t('mapBtn')}</button>
+          <button class="r-action" onclick="searchMore('${r.name}', '${r.category}')">${t('searchMoreBtn')}</button>
         </div>
-      </div>
-    `).join('');
+        <button class="r-queue-btn" onclick="openQueueModal('${r.name.replace(/'/g,"\\'")}')">
+          ${t('queueBtn')}
+        </button>
+      </div>`;
+    }).join('');
 
     if (round === 1) {
       list.innerHTML = cards;
-      // Show 2nd round button
       document.getElementById('secondRoundBtn').classList.remove('hidden');
       document.getElementById('secondRoundSection').classList.add('hidden');
     } else {
@@ -1256,8 +1891,8 @@ JSON만 출력:
         <div class="second-round-header">
           <span class="second-round-icon">🍻</span>
           <div>
-            <div style="font-family:'Noto Serif KR',serif;font-size:16px;font-weight:700;">2차 맛집 추천</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">식사 후 이어가기 좋은 곳</div>
+            <div style="font-family:'Jua',sans-serif;font-size:16px;">${t('secondRoundTitle')}</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${t('secondRoundSub')}</div>
           </div>
         </div>
         ${cards}
@@ -1266,14 +1901,19 @@ JSON만 출력:
     }
   }
 
-  function openMap(name) {
-    const q = encodeURIComponent((state.locationName || '') + ' ' + name);
-    window.open(`https://map.naver.com/v5/search/${q}`, '_blank');
+  function openMap(name, category) {
+    // 가상 식당명 대신 카테고리+위치로 실제 검색
+    const searchTerm = category
+      ? encodeURIComponent((state.locationName || '') + ' ' + category)
+      : encodeURIComponent((state.locationName || '') + ' 맛집');
+    window.open(`https://map.naver.com/v5/search/${searchTerm}`, '_blank');
   }
 
-  function searchMore(name) {
-    const q = encodeURIComponent((state.locationName || '') + ' ' + name);
-    window.open(`https://search.naver.com/search.naver?query=${q}`, '_blank');
+  function searchMore(name, category) {
+    const searchTerm = category
+      ? encodeURIComponent((state.locationName || '') + ' ' + category + ' 맛집')
+      : encodeURIComponent((state.locationName || '') + ' 맛집');
+    window.open(`https://search.naver.com/search.naver?query=${searchTerm}`, '_blank');
   }
 
   function startSecondRound() {
@@ -1288,6 +1928,59 @@ JSON만 출력:
         </div>
       </div>`;
     fetchRecommendations(2);
+  }
+
+  function openQueueModal(restaurantName) {
+    document.getElementById('queueContent').innerHTML = `
+      <div class="modal-title">${t('queueTitle')}</div>
+      <div class="modal-restaurant">📍 ${restaurantName}</div>
+      <div class="queue-option" onclick="selectQueueType('o2o', '${restaurantName.replace(/'/g,"\\'")}')">
+        <span class="queue-option-icon">🏃</span>
+        <div class="queue-option-info">
+          <div class="queue-option-title">${t('queueO2OTitle')}</div>
+          <div class="queue-option-desc">${t('queueO2ODesc')}</div>
+          <span class="queue-option-badge badge-o2o">${t('queueO2OBadge')}</span>
+        </div>
+      </div>
+      <div class="queue-option" onclick="selectQueueType('remote', '${restaurantName.replace(/'/g,"\\'")}')">
+        <span class="queue-option-icon">📱</span>
+        <div class="queue-option-info">
+          <div class="queue-option-title">${t('queueRemoteTitle')}</div>
+          <div class="queue-option-desc">${t('queueRemoteDesc')}</div>
+          <span class="queue-option-badge badge-remote">${t('queueRemoteBadge')}</span>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeQueueModal()">${t('queueClose')}</button>
+    `;
+    document.getElementById('queueModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeQueueModal(e) {
+    if (e && e.target !== document.getElementById('queueModal')) return;
+    document.getElementById('queueModal').classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
+  function selectQueueType(type, restaurantName) {
+    const isO2O = type === 'o2o';
+    document.getElementById('queueContent').innerHTML = `
+      <div class="queue-confirm">
+        <span class="queue-confirm-icon">${isO2O ? '🏃' : '📱'}</span>
+        <div class="queue-confirm-title">${isO2O ? t('queueConfirmO2O') : t('queueConfirmRemote')}</div>
+        <div class="queue-confirm-desc">
+          <strong style="color:var(--accent)">${restaurantName}</strong><br>
+          ${isO2O ? t('queueConfirmO2ODesc') : t('queueConfirmRemoteDesc')}
+        </div>
+        <div style="background:var(--surface2);border-radius:12px;padding:14px;margin-bottom:16px;font-size:13px;color:var(--text-muted);line-height:1.8;">
+          ${isO2O
+            ? `${t('queueWaitTime')} <strong style="color:var(--text)"> 약 15~20분</strong><br>${t('queueFee')} <strong style="color:var(--accent)"> ${t('queueFeeVal')}</strong>`
+            : `${t('queueCurrentWait')} <strong style="color:var(--text)"> 약 20~30분</strong><br>${t('queueNotify')} <strong style="color:var(--text)"> ${t('queueNotifyVal')}</strong>`
+          }
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeQueueModal()" style="background:var(--accent);color:#fff;border:none;font-weight:700;">${t('confirmBtn')}</button>
+    `;
   }
 
   function resetApp() {
