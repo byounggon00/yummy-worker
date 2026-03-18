@@ -1,0 +1,1319 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>맛있는 직장인</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;900&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #1a1a1a;
+    --surface2: #242424;
+    --accent: #e8a045;
+    --accent2: #c45c1a;
+    --text: #f0ece4;
+    --text-muted: #888;
+    --border: #333;
+    --success: #5cb85c;
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(232,160,69,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 90%, rgba(196,92,26,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 16px 40px;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    padding: 40px 0 32px;
+  }
+
+  .logo-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    display: block;
+    filter: drop-shadow(0 0 20px rgba(232,160,69,0.4));
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  h1 {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  h1 span {
+    color: var(--accent);
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+  }
+
+  /* Step indicator */
+  .steps-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+
+  .step-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: all 0.3s ease;
+  }
+
+  .step-dot.active {
+    background: var(--accent);
+    width: 24px;
+    border-radius: 4px;
+  }
+
+  .step-dot.done {
+    background: var(--accent2);
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 16px;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: slideUp 0.5s ease forwards;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+
+  .card-title {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text);
+  }
+
+  /* Option Buttons */
+  .options-grid {
+    display: grid;
+    gap: 10px;
+  }
+
+  .options-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .options-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .options-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+  .opt-btn {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .opt-btn .icon {
+    font-size: 24px;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .opt-btn:hover {
+    border-color: var(--accent);
+    background: rgba(232,160,69,0.08);
+    transform: translateY(-2px);
+  }
+
+  .opt-btn.selected {
+    border-color: var(--accent);
+    background: rgba(232,160,69,0.15);
+    color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(232,160,69,0.2);
+  }
+
+  .opt-btn.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* Number input */
+  .number-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 8px 0;
+  }
+
+  .num-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 22px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-family: 'Noto Sans KR', sans-serif;
+    line-height: 1;
+  }
+
+  .num-btn:hover {
+    border-color: var(--accent);
+    background: rgba(232,160,69,0.1);
+  }
+
+  .num-display {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--accent);
+    min-width: 60px;
+    text-align: center;
+    line-height: 1;
+  }
+
+  .num-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 4px;
+  }
+
+  /* CTA Button */
+  .cta-btn {
+    width: 100%;
+    padding: 18px;
+    border-radius: var(--radius);
+    border: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(232,160,69,0.3);
+    margin-top: 8px;
+  }
+
+  .cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(232,160,69,0.45);
+  }
+
+  .cta-btn:active { transform: translateY(0); }
+
+  .cta-btn::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.6s;
+  }
+
+  .cta-btn:hover::before { transform: translateX(100%); }
+
+  .cta-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* Loading */
+  .loading-screen {
+    text-align: center;
+    padding: 60px 0;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .loading-bowl {
+    font-size: 64px;
+    display: block;
+    margin-bottom: 24px;
+    animation: spin 1s ease-in-out infinite alternate;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(-15deg) scale(1); }
+    100% { transform: rotate(15deg) scale(1.1); }
+  }
+
+  .loading-text {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .loading-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .loading-dots {
+    display: inline-flex;
+    gap: 6px;
+    margin-top: 20px;
+  }
+
+  .loading-dots span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: bounce 1.2s ease-in-out infinite;
+  }
+
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+    40% { transform: scale(1.2); opacity: 1; }
+  }
+
+  /* Results */
+  .results-header {
+    text-align: center;
+    padding: 24px 0 20px;
+    animation: slideUp 0.4s ease forwards;
+  }
+
+  .results-header h2 {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 22px;
+    font-weight: 900;
+    margin-bottom: 6px;
+  }
+
+  .results-header p {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .tag-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin: 12px 0 20px;
+  }
+
+  .tag {
+    background: rgba(232,160,69,0.12);
+    border: 1px solid rgba(232,160,69,0.3);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+  }
+
+  /* Restaurant Card */
+  .restaurant-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 14px;
+    transition: all 0.3s ease;
+    animation: slideUp 0.5s ease forwards;
+    animation-delay: calc(var(--i) * 0.1s);
+    opacity: 0;
+  }
+
+  .restaurant-card:hover {
+    border-color: rgba(232,160,69,0.5);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  .r-header {
+    display: flex;
+    align-items: flex-start;
+    padding: 18px;
+    gap: 14px;
+  }
+
+  .r-rank {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--accent);
+    opacity: 0.5;
+    line-height: 1;
+    min-width: 32px;
+  }
+
+  .r-rank.top { opacity: 1; color: var(--accent); }
+
+  .r-info { flex: 1; }
+
+  .r-name {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    line-height: 1.3;
+  }
+
+  .r-category {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .r-meta {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .r-rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .r-distance {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .r-price-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(232,160,69,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(232,160,69,0.2);
+  }
+
+  .r-body {
+    padding: 0 18px 16px 18px;
+    padding-left: calc(18px + 32px + 14px);
+  }
+
+  .r-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  .r-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .r-tag {
+    font-size: 11px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+
+  .r-footer {
+    display: flex;
+    border-top: 1px solid var(--border);
+  }
+
+  .r-action {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+    border: none;
+    font-family: 'Noto Sans KR', sans-serif;
+    letter-spacing: 0.3px;
+  }
+
+  .r-action + .r-action { border-left: 1px solid var(--border); }
+
+  .r-action:hover {
+    background: rgba(232,160,69,0.08);
+    color: var(--accent);
+  }
+
+  .r-parking {
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  .r-parking.ok {
+    background: rgba(76,175,80,0.1);
+    border: 1px solid rgba(76,175,80,0.25);
+    color: #6fcf6f;
+  }
+
+  .r-parking.no {
+    background: rgba(255,100,100,0.08);
+    border: 1px solid rgba(255,100,100,0.2);
+    color: #e07070;
+  }
+
+  /* 2차 추천 버튼 */
+  .second-round-btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: var(--radius);
+    border: 1.5px dashed var(--accent);
+    background: rgba(232,160,69,0.06);
+    color: var(--accent);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: all 0.25s;
+    margin-bottom: 12px;
+  }
+
+  .second-round-btn:hover {
+    background: rgba(232,160,69,0.14);
+    transform: translateY(-2px);
+  }
+
+  /* 2차 결과 섹션 헤더 */
+  .second-round-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    background: rgba(232,160,69,0.07);
+    border: 1px solid rgba(232,160,69,0.2);
+    border-radius: 14px;
+    margin-bottom: 14px;
+    margin-top: 4px;
+  }
+
+  .second-round-icon {
+    font-size: 32px;
+  }
+  .reset-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+    letter-spacing: 0.3px;
+  }
+
+  .reset-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Location bar at top of form */
+  .location-bar-top {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideUp 0.4s ease forwards;
+  }
+
+  .loc-pin {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .loc-info { flex: 1; min-width: 0; }
+
+  .loc-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .loc-detail {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .loc-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #888;
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+
+  .loc-status-dot.green { background: #4caf50; box-shadow: 0 0 6px rgba(76,175,80,0.5); }
+  .loc-status-dot.yellow { background: var(--accent); animation: pulse-dot 1s ease-in-out infinite; }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* Hidden */
+  .hidden { display: none !important; }
+  .summary-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-muted);
+    animation: slideUp 0.4s ease forwards;
+  }
+
+  .summary-bar .loc-icon { font-size: 16px; }
+
+  .location-status {
+    flex: 1;
+  }
+
+  .location-status strong {
+    color: var(--text);
+    display: block;
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <span class="logo-icon">🍱</span>
+    <h1><span>맛있는</span> 직장인</h1>
+    <p class="subtitle">조건을 선택하면 주변 맛집을 찾아드려요</p>
+  </header>
+
+  <!-- Location Bar (always visible) -->
+  <div class="location-bar-top" id="locationBarTop">
+    <span class="loc-pin">📍</span>
+    <div class="loc-info">
+      <div class="loc-name" id="locNameTop">위치 확인 중...</div>
+      <div class="loc-detail" id="locDetailTop">GPS 신호를 가져오는 중이에요</div>
+    </div>
+    <div class="loc-status-dot yellow" id="locDot"></div>
+  </div>
+
+  <!-- Step Progress -->
+  <div class="steps-bar" id="stepsBar">
+    <div class="step-dot active" id="dot0"></div>
+    <div class="step-dot" id="dot1"></div>
+    <div class="step-dot" id="dot2"></div>
+    <div class="step-dot" id="dot3"></div>
+  </div>
+
+  <!-- FORM -->
+  <div id="formSection">
+
+    <!-- Step 1: 식사 시간 -->
+    <div class="card" id="step0">
+      <div class="card-label">Step 1</div>
+      <div class="card-title">어떤 식사인가요?</div>
+      <div class="options-grid cols-3">
+        <button class="opt-btn" onclick="select('meal','아침','🌅')" id="meal-아침">
+          <span class="icon">🌅</span>아침
+        </button>
+        <button class="opt-btn" onclick="select('meal','점심','☀️')" id="meal-점심">
+          <span class="icon">☀️</span>점심
+        </button>
+        <button class="opt-btn" onclick="select('meal','저녁','🌙')" id="meal-저녁">
+          <span class="icon">🌙</span>저녁
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2: 인원수 -->
+    <div class="card" id="step1">
+      <div class="card-label">Step 2</div>
+      <div class="card-title">몇 명이서 드시나요?</div>
+      <div class="number-selector">
+        <button class="num-btn" onclick="changeCount(-1)">−</button>
+        <div>
+          <div class="num-display" id="countDisplay">2</div>
+          <div class="num-label">명</div>
+        </div>
+        <button class="num-btn" onclick="changeCount(1)">＋</button>
+      </div>
+    </div>
+
+    <!-- Step 3: 동행 유형 -->
+    <div class="card" id="step2">
+      <div class="card-label">Step 3</div>
+      <div class="card-title">누구와 함께하나요?</div>
+      <div class="options-grid cols-2">
+        <button class="opt-btn" onclick="select('companion','친구','👫')" id="companion-친구">
+          <span class="icon">👫</span>친구·가족
+        </button>
+        <button class="opt-btn" onclick="select('companion','고객사','🤝')" id="companion-고객사">
+          <span class="icon">🤝</span>고객사·거래처
+        </button>
+        <button class="opt-btn" onclick="select('companion','직장동료','💼')" id="companion-직장동료">
+          <span class="icon">💼</span>직장 동료
+        </button>
+        <button class="opt-btn" onclick="select('companion','혼자','🙋')" id="companion-혼자">
+          <span class="icon">🙋</span>혼밥
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 4: 가격대 -->
+    <div class="card" id="step3">
+      <div class="card-label">Step 4</div>
+      <div class="card-title">예산은 어느 정도인가요? <span style="font-size:12px;color:var(--text-muted)">(1인 기준)</span></div>
+      <div class="options-grid cols-3">
+        <button class="opt-btn" onclick="select('price','저가','💰')" id="price-저가">
+          <span class="icon">💰</span>저가<br><small style="font-size:10px;color:var(--text-muted)">~1만원</small>
+        </button>
+        <button class="opt-btn" onclick="select('price','중가','💰💰')" id="price-중가">
+          <span class="icon">💰💰</span>중가<br><small style="font-size:10px;color:var(--text-muted)">1~3만원</small>
+        </button>
+        <button class="opt-btn" onclick="select('price','고가','💰💰💰')" id="price-고가">
+          <span class="icon">💰💰💰</span>고가<br><small style="font-size:10px;color:var(--text-muted)">3만원~</small>
+        </button>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <button class="cta-btn" id="searchBtn" onclick="startSearch()" disabled>
+      🔍 주변 맛집 찾기
+    </button>
+
+  </div>
+
+  <!-- LOADING -->
+  <div id="loadingSection" class="hidden">
+    <div class="loading-screen">
+      <span class="loading-bowl">🍲</span>
+      <div class="loading-text">맛집을 찾고 있어요</div>
+      <div class="loading-sub" id="loadingMsg">위치 정보를 가져오는 중...</div>
+      <div class="loading-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="resultsSection" class="hidden">
+    <div class="results-header">
+      <h2 id="resultsTitle">🎉 추천 맛집이에요!</h2>
+      <p id="resultsSub">선택하신 조건에 맞는 주변 맛집이에요</p>
+      <div class="tag-summary" id="tagSummary"></div>
+    </div>
+
+    <div class="summary-bar" id="locationBar">
+      <span class="loc-icon">📍</span>
+      <div class="location-status">
+        <strong id="locationText">현재 위치 기준</strong>
+        <span id="locationSub" style="font-size:11px;">주변 도보 10분 이내</span>
+      </div>
+    </div>
+
+    <div id="restaurantList"></div>
+
+    <!-- 2차 추천 버튼 -->
+    <button class="second-round-btn hidden" id="secondRoundBtn" onclick="startSecondRound()">
+      🍻 식사 끝! 2차 맛집도 추천받기
+    </button>
+
+    <!-- 2차 결과 -->
+    <div id="secondRoundSection" class="hidden"></div>
+
+    <button class="reset-btn" onclick="resetApp()">
+      ↩ 다시 검색하기
+    </button>
+  </div>
+
+</div>
+
+<script>
+  const state = {
+    meal: null,
+    count: 2,
+    companion: null,
+    price: null,
+    lat: null,
+    lng: null,
+    locationName: null,
+    locationDetail: null
+  };
+
+  // Get location on page load
+  window.addEventListener('load', () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async pos => {
+          state.lat = pos.coords.latitude;
+          state.lng = pos.coords.longitude;
+          // Reverse geocode using nominatim
+          try {
+            const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${state.lat}&lon=${state.lng}&format=json&accept-language=ko`);
+            const d = await r.json();
+            const addr = d.address || {};
+            const city = addr.city || addr.county || addr.state || '';
+            const district = addr.suburb || addr.neighbourhood || addr.quarter || addr.borough || '';
+            const road = addr.road || '';
+            state.locationName = district ? `${city} ${district}` : city;
+            state.locationDetail = road || `위도 ${state.lat.toFixed(3)}, 경도 ${state.lng.toFixed(3)}`;
+          } catch {
+            state.locationName = `위도 ${state.lat.toFixed(3)}`;
+            state.locationDetail = `경도 ${state.lng.toFixed(3)}`;
+          }
+          document.getElementById('locNameTop').textContent = state.locationName || '현재 위치';
+          document.getElementById('locDetailTop').textContent = state.locationDetail || '위치 확인 완료';
+          document.getElementById('locDot').className = 'loc-status-dot green';
+        },
+        () => {
+          state.lat = 37.5665; state.lng = 126.9780;
+          state.locationName = '서울 중구';
+          state.locationDetail = '위치 권한이 없어 기본값으로 설정됐어요';
+          document.getElementById('locNameTop').textContent = '서울 중구 (기본값)';
+          document.getElementById('locDetailTop').textContent = '정확한 추천을 위해 위치 권한을 허용해주세요';
+          document.getElementById('locDot').className = 'loc-status-dot';
+        },
+        { timeout: 8000 }
+      );
+    } else {
+      document.getElementById('locNameTop').textContent = '위치 사용 불가';
+      document.getElementById('locDetailTop').textContent = '브라우저가 위치 기능을 지원하지 않아요';
+    }
+  });
+
+  function select(key, value, icon) {
+    state[key] = value;
+    // Deselect siblings
+    document.querySelectorAll(`[id^="${key}-"]`).forEach(el => el.classList.remove('selected'));
+    document.getElementById(`${key}-${value}`).classList.add('selected');
+    checkReady();
+    updateStepDots();
+  }
+
+  function changeCount(delta) {
+    state.count = Math.max(1, Math.min(20, state.count + delta));
+    document.getElementById('countDisplay').textContent = state.count;
+  }
+
+  function checkReady() {
+    const ready = state.meal && state.companion && state.price;
+    document.getElementById('searchBtn').disabled = !ready;
+  }
+
+  function updateStepDots() {
+    const filled = [!!state.meal, true, !!state.companion, !!state.price];
+    const currentStep = filled.filter(Boolean).length - 1;
+    filled.forEach((done, i) => {
+      const dot = document.getElementById(`dot${i}`);
+      dot.className = 'step-dot';
+      if (i < currentStep) dot.classList.add('done');
+      else if (i === currentStep) dot.classList.add('active');
+    });
+  }
+
+  function startSearch() {
+    document.getElementById('formSection').classList.add('hidden');
+    document.getElementById('stepsBar').classList.add('hidden');
+    document.getElementById('locationBarTop').classList.add('hidden');
+    document.getElementById('loadingSection').classList.remove('hidden');
+
+    if (state.lat && state.lng) {
+      updateLoadingMsg('AI가 맛집을 분석하는 중...');
+      setTimeout(() => fetchRecommendations(), 1500);
+    } else if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          state.lat = pos.coords.latitude;
+          state.lng = pos.coords.longitude;
+          updateLoadingMsg('AI가 맛집을 분석하는 중...');
+          setTimeout(() => fetchRecommendations(), 1500);
+        },
+        () => {
+          state.lat = 37.5665; state.lng = 126.9780;
+          state.locationName = '서울 중구';
+          updateLoadingMsg('AI가 맛집을 분석하는 중...');
+          setTimeout(() => fetchRecommendations(), 1500);
+        },
+        { timeout: 5000 }
+      );
+    } else {
+      state.lat = 37.5665; state.lng = 126.9780;
+      setTimeout(() => fetchRecommendations(), 2000);
+    }
+  }
+
+  function updateLoadingMsg(msg) {
+    document.getElementById('loadingMsg').textContent = msg;
+  }
+
+  // ─────────────────────────────────────────────
+  // 추천 알고리즘 엔진
+  // 각 선택 조건에 가중치를 부여해 카테고리·분위기·필터 조건을 결정
+  // ─────────────────────────────────────────────
+  function runAlgorithm(round) {
+    const scores = {};
+
+    const add = (cat, pts) => { scores[cat] = (scores[cat] || 0) + pts; };
+
+    // ── 1. 동행 유형 가중치 (가장 중요 — 40점 배분)
+    if (state.companion === '고객사') {
+      add('한정식', 40); add('일식코스', 35); add('파인다이닝', 30);
+      add('한식', 15); add('양식', 15);
+    } else if (state.companion === '직장동료') {
+      add('고기구이', 35); add('한식', 30); add('중식', 25);
+      add('일식', 20); add('해물', 20); add('양식', 15);
+    } else if (state.companion === '친구') {
+      add('고기구이', 35); add('분식', 25); add('중식', 25);
+      add('일식', 20); add('해물', 20); add('이색음식', 15);
+    } else if (state.companion === '혼자') {
+      add('분식', 30); add('한식백반', 30); add('라멘', 25);
+      add('일식', 20); add('국밥', 25); add('덮밥', 20);
+    }
+
+    // ── 2. 가격대 가중치 (30점 배분)
+    if (state.price === '저가') {
+      add('분식', 30); add('한식백반', 30); add('국밥', 25);
+      add('라멘', 20); add('덮밥', 20); add('냉면', 15);
+      // 고가 장르 감점
+      add('한정식', -40); add('파인다이닝', -50); add('일식코스', -40);
+    } else if (state.price === '중가') {
+      add('고기구이', 30); add('일식', 25); add('해물', 25);
+      add('중식', 20); add('양식', 20); add('한식', 20);
+    } else if (state.price === '고가') {
+      add('한정식', 40); add('파인다이닝', 40); add('일식코스', 35);
+      add('고기구이', 25); add('양식', 25);
+      // 저가 장르 감점
+      add('분식', -50); add('국밥', -30); add('한식백반', -20);
+    }
+
+    // ── 3. 식사 시간 가중치 (20점 배분)
+    if (state.meal === '아침') {
+      add('한식백반', 20); add('국밥', 20); add('죽', 15);
+      // 저녁 전용 감점
+      add('고기구이', -20); add('파인다이닝', -15); add('한정식', -10);
+    } else if (state.meal === '점심') {
+      add('한식', 20); add('분식', 15); add('일식', 15);
+      add('중식', 15); add('국밥', 10);
+      // 점심특선 가능 장르 우대
+      add('한정식', -10); add('파인다이닝', -15);
+    } else if (state.meal === '저녁') {
+      add('고기구이', 20); add('해물', 15); add('일식코스', 15);
+      add('파인다이닝', 15); add('한정식', 10); add('양식', 10);
+    }
+
+    // ── 4. 인원수 가중치 (10점 배분)
+    const n = state.count;
+    if (n === 1) {
+      add('분식', 10); add('한식백반', 10); add('라멘', 10); add('국밥', 10);
+      add('한정식', -15); add('고기구이', -10);
+    } else if (n >= 2 && n <= 4) {
+      add('일식', 10); add('고기구이', 10); add('양식', 8);
+    } else if (n >= 5 && n <= 8) {
+      add('고기구이', 15); add('중식', 15); add('해물', 10); add('한식', 10);
+      add('일식코스', -10); add('파인다이닝', -15);
+    } else if (n >= 9) {
+      add('중식', 20); add('고기구이', 15); add('한식', 15);
+      add('일식코스', -20); add('파인다이닝', -25); add('한정식', -10);
+    }
+
+    // ── 5. 상위 점수 카테고리 추출 (최소 3개, 중복 없이)
+    const sorted = Object.entries(scores)
+      .filter(([, v]) => v > 0)
+      .sort((a, b) => b[1] - a[1]);
+
+    const topCats = sorted.slice(0, 5).map(([k]) => k);
+
+    // ── 6. 분위기 키워드 결정
+    let vibeKeywords = [];
+    if (state.companion === '고객사') {
+      vibeKeywords = ['격식 있는', '조용한', '프라이빗한', '품격 있는'];
+    } else if (state.companion === '직장동료') {
+      vibeKeywords = ['활기찬', '편안한', '넓은 단체석', '왁자지껄'];
+    } else if (state.companion === '친구') {
+      vibeKeywords = ['편안한', '캐주얼한', '활기찬', '재미있는'];
+    } else if (state.companion === '혼자') {
+      vibeKeywords = ['조용한', '혼밥 가능', '빠른 회전', '1인석'];
+    }
+
+    // ── 7. 운영 시간 조건
+    let timeConstraint = '';
+    if (state.meal === '아침') timeConstraint = '아침 영업 필수 (7~10시 운영)';
+    else if (state.meal === '점심') timeConstraint = '점심 영업 필수, 점심특선 메뉴 있으면 우선';
+    else timeConstraint = '저녁 영업 필수 (오후 5시 이후)';
+
+    // ── 8. 인원 관련 조건
+    let groupConstraint = '';
+    if (n === 1) groupConstraint = '혼밥 가능한 구조 (카운터석 또는 1인 테이블)';
+    else if (n >= 5) groupConstraint = `단체석 ${n}명 이상 수용 가능한 곳`;
+    else groupConstraint = `${n}명이 편하게 앉을 수 있는 테이블`;
+
+    // ── 9. 2차 카테고리 결정
+    let secondRoundCats = [];
+    if (state.companion === '고객사') {
+      secondRoundCats = ['위스키바', '와인바', '고급 라운지바'];
+    } else if (state.companion === '직장동료') {
+      secondRoundCats = ['호프집', '이자카야', '포차', '노래방 겸 주점'];
+    } else if (state.companion === '친구') {
+      secondRoundCats = ['포차', '이자카야', '감성 카페바', '루프탑바'];
+    } else {
+      secondRoundCats = ['카페', '디저트 카페'];
+    }
+
+    return { topCats, vibeKeywords, timeConstraint, groupConstraint, secondRoundCats };
+  }
+
+  function buildPrompt(round) {
+    const locationStr = state.locationName || `위도 ${state.lat?.toFixed(4)}, 경도 ${state.lng?.toFixed(4)}`;
+    const algo = runAlgorithm(round);
+    const excludeStr = round === 2 && state.firstRoundNames?.length
+      ? `\n- 반드시 제외: ${state.firstRoundNames.join(', ')}`
+      : '';
+    const priceRange = state.price === '저가' ? '5,000~12,000원'
+      : state.price === '중가' ? '13,000~35,000원' : '35,000원 이상';
+
+    if (round === 2) {
+      return `한국 현지 맛집 추천 전문가입니다.
+
+[2차 장소 추천]
+위치: ${locationStr} 근처 도보 10분 이내
+인원: ${state.count}명 / 동행: ${state.companion}
+분위기: ${algo.vibeKeywords.join(', ')}
+추천 장르: ${algo.secondRoundCats.join(', ')} 중에서
+${excludeStr}
+
+1인당 예산: ${priceRange} 수준 (2차이므로 음료·안주 기준)
+조건: ${algo.groupConstraint}
+
+식당 이름은 반드시 실제 한국 상호명처럼 자연스럽게 (예: "달빛포차", "사케야", "루나바").
+지역명 절대 붙이지 말 것. 정확히 3곳.
+
+JSON만 출력:
+[{"name":"","category":"","rating":4.3,"distance":"도보 5분","pricePerPerson":"15,000원","parking":false,"parkingNote":"주차 불가 (대중교통 추천)","description":"한 줄 소개","tags":["태그1","태그2","태그3"],"recommend":"${state.companion}에게 추천 이유"}]`;
+    }
+
+    return `한국 현지 맛집 추천 전문가입니다.
+
+[알고리즘 분석 결과]
+위치: ${locationStr} 근처 도보 10분 이내
+추천 음식 장르 (우선순위 순): ${algo.topCats.join(' > ')}
+분위기 키워드: ${algo.vibeKeywords.join(', ')}
+운영시간 조건: ${algo.timeConstraint}
+인원 조건: ${algo.groupConstraint}
+1인 예산: ${priceRange}
+식사: ${state.meal} / 인원: ${state.count}명 / 동행: ${state.companion} / 가격대: ${state.price}
+
+[추천 지시]
+- 위 장르 우선순위를 반영해 서로 다른 음식 종류 3곳 추천
+- 분위기 키워드에 맞는 곳 선택
+- 인원·시간 조건 충족하는 곳만 포함
+- 식당 이름은 실제 한국 상호명처럼 자연스럽게 (예: "미가", "온기정", "별미옥", "청담면옥")
+- 지역명·동네명을 상호에 붙이지 말 것
+- 정확히 3곳만
+
+JSON만 출력:
+[{"name":"","category":"","rating":4.5,"distance":"도보 5분","pricePerPerson":"12,000원","parking":true,"parkingNote":"건물 내 주차 2시간 무료","description":"한 줄 소개","tags":["태그1","태그2","태그3"],"recommend":"${state.companion}에게 추천하는 이유"}]`;
+  }
+
+  async function fetchRecommendations(round = 1) {
+    updateLoadingMsg(round === 1 ? '주변 맛집을 분석하는 중...' : '2차 맛집을 찾는 중...');
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1200,
+          messages: [{ role: 'user', content: buildPrompt(round) }]
+        })
+      });
+
+      const data = await res.json();
+      const text = data.content.map(b => b.text || '').join('');
+      const clean = text.replace(/```json|```/g, '').trim();
+      const restaurants = JSON.parse(clean);
+
+      if (round === 1) state.firstRoundNames = restaurants.map(r => r.name);
+      showResults(restaurants, round);
+    } catch (e) {
+      showResults(getFallbackData(round), round);
+    }
+  }
+
+  function getFallbackData(round = 1) {
+    const byPrice = {
+      '저가': [
+        { name: '온기정', category: '한식', rating: 4.3, distance: '도보 3분', pricePerPerson: '8,000원', parking: false, parkingNote: '주차 불가 (도보 이동 추천)', description: '진한 육수의 손칼국수', tags: ['칼국수', '만두', '점심특선'], recommend: `${state.companion}과 부담 없이 즐기기 좋아요` },
+        { name: '수복식당', category: '한식', rating: 4.1, distance: '도보 5분', pricePerPerson: '9,000원', parking: false, parkingNote: '주차 불가 (도보 이동 추천)', description: '40년 전통 순대국밥', tags: ['국밥', '순대', '24시간'], recommend: '든든하고 빠르게 식사 가능해요' },
+        { name: '청년돈까스', category: '경양식', rating: 4.4, distance: '도보 7분', pricePerPerson: '10,000원', parking: true, parkingNote: '건물 앞 공영주차장 이용 가능', description: '바삭한 수제 돈까스', tags: ['수제돈까스', '치즈', '세트메뉴'], recommend: '양이 많고 가성비 최고예요' }
+      ],
+      '중가': [
+        { name: '대풍숯불', category: '고기집', rating: 4.6, distance: '도보 8분', pricePerPerson: '25,000원', parking: true, parkingNote: '건물 지하 주차 가능 (식사 시 1시간 무료)', description: '참숯으로 굽는 국내산 한우', tags: ['한우', '참숯', '포장가능'], recommend: `${state.companion}과 특별한 식사에 어울려요` },
+        { name: '스시 미도리', category: '일식', rating: 4.7, distance: '도보 10분', pricePerPerson: '28,000원', parking: false, parkingNote: '주차 불가 (인근 유료주차장 이용)', description: '점심 특가 스시 코스', tags: ['스시', '오마카세', '점심특가'], recommend: '품격 있는 식사 자리로 최고예요' },
+        { name: '별미해물탕', category: '해물', rating: 4.5, distance: '도보 6분', pricePerPerson: '20,000원', parking: true, parkingNote: '전용 주차장 보유 (무료)', description: '신선한 해산물 가득한 해물탕', tags: ['해물탕', '낙지', '새우'], recommend: '단체 식사로 분위기 좋아요' }
+      ],
+      '고가': [
+        { name: '금강산한정식', category: '한식', rating: 4.8, distance: '도보 15분', pricePerPerson: '55,000원', parking: true, parkingNote: '전용 발렛파킹 가능', description: '전통 방식 한정식 코스요리', tags: ['한정식', '코스', '프라이빗룸'], recommend: `${state.companion}에게 깊은 인상을 남길 수 있어요` },
+        { name: '그릴 에이스', category: '양식', rating: 4.7, distance: '택시 5분', pricePerPerson: '80,000원', parking: true, parkingNote: '건물 지하 주차 2시간 무료', description: '드라이에이징 프리미엄 스테이크', tags: ['스테이크', '와인페어링', '프라이빗'], recommend: '격식 있는 비즈니스 자리에 완벽해요' },
+        { name: '하루카', category: '일식', rating: 4.9, distance: '택시 8분', pricePerPerson: '120,000원', parking: false, parkingNote: '주차 불가 (발렛 대행 이용 가능)', description: '제철 재료로 구성된 오마카세', tags: ['오마카세', '제철재료', '파인다이닝'], recommend: '특별한 자리에 잊지 못할 경험이에요' }
+      ]
+    };
+    const base = byPrice[state.price] || byPrice['중가'];
+    if (round === 2) {
+      return [
+        { name: '달빛포차', category: '술집·포차', rating: 4.3, distance: '도보 5분', pricePerPerson: '15,000원', parking: false, parkingNote: '주차 불가 (대중교통 이용 추천)', description: '분위기 좋은 감성 포차', tags: ['포차', '2차', '안주'], recommend: '가볍게 2차로 이어가기 딱 좋아요' },
+        { name: '사케야', category: '일식주점', rating: 4.5, distance: '도보 8분', pricePerPerson: '20,000원', parking: false, parkingNote: '주차 불가 (인근 유료주차장 이용)', description: '일본식 분위기의 이자카야', tags: ['이자카야', '사케', '꼬치'], recommend: '2차로 이어가기 완벽해요' },
+        { name: '루나 루프탑', category: '바·라운지', rating: 4.6, distance: '도보 10분', pricePerPerson: '25,000원', parking: true, parkingNote: '건물 주차 가능 (유료)', description: '야경과 함께하는 루프탑 바', tags: ['루프탑', '칵테일', '야경'], recommend: '분위기 있는 2차 자리로 최고예요' }
+      ];
+    }
+    return base;
+  }
+
+  function showResults(restaurants, round = 1) {
+    document.getElementById('loadingSection').classList.add('hidden');
+    document.getElementById('resultsSection').classList.remove('hidden');
+
+    // Tags (only on first round)
+    if (round === 1) {
+      const tagData = [
+        { label: state.meal, emoji: state.meal === '아침' ? '🌅' : state.meal === '점심' ? '☀️' : '🌙' },
+        { label: `${state.count}명`, emoji: '👥' },
+        { label: state.companion, emoji: '🤝' },
+        { label: state.price, emoji: '💰' }
+      ];
+      document.getElementById('tagSummary').innerHTML = tagData.map(t =>
+        `<span class="tag">${t.emoji} ${t.label}</span>`
+      ).join('');
+      document.getElementById('locationText').textContent = state.locationName || '현재 위치 기준';
+      document.getElementById('locationSub').textContent = state.locationDetail || '주변 도보 10분 이내';
+      document.getElementById('resultsTitle').textContent = '🎉 추천 맛집이에요!';
+      document.getElementById('resultsSub').textContent = `${state.locationName || '현재 위치'} 주변 맛집 3곳`;
+    } else {
+      document.getElementById('resultsTitle').textContent = '🍻 2차 추천이에요!';
+      document.getElementById('resultsSub').textContent = '식사 후 이어가기 좋은 곳';
+    }
+
+    const list = document.getElementById('restaurantList');
+    const cards = restaurants.slice(0, 3).map((r, i) => `
+      <div class="restaurant-card" style="--i: ${i}">
+        <div class="r-header">
+          <div class="r-rank ${i === 0 ? 'top' : ''}">${i + 1}</div>
+          <div class="r-info">
+            <div class="r-name">${r.name}</div>
+            <div class="r-category">${r.category}</div>
+            <div class="r-meta">
+              <span class="r-rating">★ ${r.rating}</span>
+              <span class="r-distance">📍 ${r.distance}</span>
+              <span class="r-price-badge">${r.pricePerPerson}/인</span>
+            </div>
+          </div>
+        </div>
+        <div class="r-body">
+          <div class="r-desc">💬 ${r.recommend || r.description}</div>
+          <div class="r-parking ${r.parking ? 'ok' : 'no'}">
+            ${r.parking ? '🅿️' : '🚫'} ${r.parkingNote || (r.parking ? '주차 가능' : '주차 불가')}
+          </div>
+          <div class="r-tags">
+            ${(r.tags || []).map(t => `<span class="r-tag">#${t}</span>`).join('')}
+          </div>
+        </div>
+        <div class="r-footer">
+          <button class="r-action" onclick="openMap('${r.name}')">🗺️ 지도 보기</button>
+          <button class="r-action" onclick="searchMore('${r.name}')">🔍 더 알아보기</button>
+        </div>
+      </div>
+    `).join('');
+
+    if (round === 1) {
+      list.innerHTML = cards;
+      // Show 2nd round button
+      document.getElementById('secondRoundBtn').classList.remove('hidden');
+      document.getElementById('secondRoundSection').classList.add('hidden');
+    } else {
+      document.getElementById('secondRoundSection').classList.remove('hidden');
+      document.getElementById('secondRoundSection').innerHTML = `
+        <div class="second-round-header">
+          <span class="second-round-icon">🍻</span>
+          <div>
+            <div style="font-family:'Noto Serif KR',serif;font-size:16px;font-weight:700;">2차 맛집 추천</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">식사 후 이어가기 좋은 곳</div>
+          </div>
+        </div>
+        ${cards}
+      `;
+      document.getElementById('secondRoundBtn').classList.add('hidden');
+    }
+  }
+
+  function openMap(name) {
+    const q = encodeURIComponent((state.locationName || '') + ' ' + name);
+    window.open(`https://map.naver.com/v5/search/${q}`, '_blank');
+  }
+
+  function searchMore(name) {
+    const q = encodeURIComponent((state.locationName || '') + ' ' + name);
+    window.open(`https://search.naver.com/search.naver?query=${q}`, '_blank');
+  }
+
+  function startSecondRound() {
+    document.getElementById('secondRoundBtn').classList.add('hidden');
+    document.getElementById('secondRoundSection').classList.remove('hidden');
+    document.getElementById('secondRoundSection').innerHTML = `
+      <div style="text-align:center;padding:32px 0;">
+        <div style="font-size:40px;margin-bottom:12px;animation:spin 1s ease-in-out infinite alternate;">🍺</div>
+        <div style="font-family:'Noto Serif KR',serif;font-size:16px;font-weight:700;">2차 맛집 찾는 중...</div>
+        <div class="loading-dots" style="justify-content:center;margin-top:12px;display:flex;">
+          <span></span><span></span><span></span>
+        </div>
+      </div>`;
+    fetchRecommendations(2);
+  }
+
+  function resetApp() {
+    state.meal = null;
+    state.companion = null;
+    state.price = null;
+    state.count = 2;
+
+    document.querySelectorAll('.opt-btn').forEach(el => el.classList.remove('selected'));
+    document.getElementById('countDisplay').textContent = '2';
+    document.getElementById('searchBtn').disabled = true;
+
+    document.getElementById('resultsSection').classList.add('hidden');
+    document.getElementById('loadingSection').classList.add('hidden');
+    document.getElementById('stepsBar').classList.remove('hidden');
+    document.getElementById('formSection').classList.remove('hidden');
+    document.getElementById('locationBarTop').classList.remove('hidden');
+    document.getElementById('secondRoundBtn').classList.add('hidden');
+    document.getElementById('secondRoundSection').classList.add('hidden');
+    document.getElementById('secondRoundSection').innerHTML = '';
+    state.firstRoundNames = [];
+
+    document.querySelectorAll('.step-dot').forEach((d, i) => {
+      d.className = 'step-dot' + (i === 0 ? ' active' : '');
+    });
+  }
+</script>
+</body>
+</html>
