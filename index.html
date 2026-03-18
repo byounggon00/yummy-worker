@@ -8,14 +8,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;900&family=Noto+Sans+KR:wght@300;400;500;700&family=Gaegu:wght@400;700&family=Jua&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d0d0d;
-    --surface: #1a1a1a;
-    --surface2: #242424;
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --surface2: #f0efed;
     --accent: #e8a045;
     --accent2: #c45c1a;
-    --text: #f0ece4;
+    --text: #1a1a1a;
     --text-muted: #888;
-    --border: #333;
+    --border: #e4e4e0;
     --success: #5cb85c;
     --radius: 16px;
   }
@@ -35,9 +35,9 @@
     content: '';
     position: fixed;
     inset: 0;
-    background: 
-      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(232,160,69,0.07) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 50% at 80% 90%, rgba(196,92,26,0.05) 0%, transparent 60%);
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(232,160,69,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 90%, rgba(196,92,26,0.04) 0%, transparent 60%);
     pointer-events: none;
     z-index: 0;
   }
@@ -468,7 +468,7 @@
   .restaurant-card:hover {
     border-color: rgba(232,160,69,0.5);
     transform: translateY(-3px);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
   }
 
   .r-header {
@@ -2493,14 +2493,36 @@ JSON만 출력:
 
   // ── 네비게이션
   function goHome() {
-    // 상세 페이지 → 숨기기
+    // 모든 섹션 숨기기
     document.getElementById('detailSection').classList.add('hidden');
     document.getElementById('detailSection').innerHTML = '';
-    // 결과가 있으면 결과로, 없으면 폼으로
-    const hasResults = !document.getElementById('resultsSection').classList.contains('hidden');
-    if (!hasResults) {
-      switchTab('recommend');
-    }
+    document.getElementById('resultsSection').classList.add('hidden');
+    document.getElementById('loadingSection').classList.add('hidden');
+    document.getElementById('secondRoundSection').classList.add('hidden');
+    document.getElementById('secondRoundSection').innerHTML = '';
+    document.getElementById('secondRoundBtn').classList.add('hidden');
+
+    // 커뮤니티 탭이면 추천 탭으로 전환
+    switchTab('recommend');
+
+    // 폼 초기화
+    state.meal = null;
+    state.companion = null;
+    state.price = null;
+    state.count = 2;
+    state.firstRoundNames = [];
+    document.querySelectorAll('.opt-btn').forEach(el => el.classList.remove('selected'));
+    document.getElementById('countDisplay').textContent = '2';
+    document.getElementById('searchBtn').disabled = true;
+    document.querySelectorAll('.step-dot').forEach((d, i) => {
+      d.className = 'step-dot' + (i === 0 ? ' active' : '');
+    });
+
+    // 폼 표시
+    document.getElementById('formSection').classList.remove('hidden');
+    document.getElementById('stepsBar').classList.remove('hidden');
+    document.getElementById('locationBarTop').classList.remove('hidden');
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
