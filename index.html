@@ -1678,28 +1678,116 @@ JSON만 출력 (다른 텍스트 절대 금지):
 [{"name":"미가","category":"고기구이","rating":4.5,"distance":"도보 5분","pricePerPerson":"25,000원","parking":true,"parkingNote":"건물 내 주차 2시간 무료","description":"한 줄 소개","tags":["태그1","태그2"],"recommend":"추천 이유","signature":"한우 꽃등심","photoKeyword":"korean beef BBQ grilled meat","orderCombo":[{"menu":"한우 등심 200g","unitPrice":"32,000원","qty":${state.count},"totalPrice":"${32000 * state.count}원","isSignature":true},{"menu":"된장찌개","unitPrice":"3,000원","qty":${state.count},"totalPrice":"${3000 * state.count}원","isSignature":false},{"menu":"공기밥","unitPrice":"1,000원","qty":${state.count},"totalPrice":"${1000 * state.count}원","isSignature":false}]}]`;
   }
 
+  // ── 카카오 API 키
+  const KAKAO_KEY = '54df8db6872088579ba86d56db6fb468';
+
+  // ── 카테고리 → 카카오 검색 키워드 매핑
+  function getCategoryKeyword(topCats) {
+    const map = {
+      '한식': '한식', '고기구이': '고기구이', '고기집': '고기구이',
+      '일식': '일식', '일식코스': '일식', '중식': '중식',
+      '분식': '분식', '해물': '해물탕', '양식': '양식',
+      '파인다이닝': '파인다이닝', '한정식': '한정식',
+      '경양식': '돈까스', '국밥': '국밥', '한식백반': '백반',
+      '라멘': '라멘', '덮밥': '덮밥', '냉면': '냉면',
+      '술집·포차': '포차', '일식주점': '이자카야', '바·라운지': '루프탑바'
+    };
+    for (const cat of (topCats || [])) {
+      if (map[cat]) return map[cat];
+    }
+    return '맛집';
+  }
+
   async function fetchRecommendations(round = 1) {
-    updateLoadingMsg(round === 1 ? '주변 맛집을 분석하는 중...' : '2차 맛집을 찾는 중...');
+    updateLoadingMsg(round === 1 ? '주변 맛집을 찾는 중...' : '2차 맛집을 찾는 중...');
 
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const algo = runAlgorithm(round);
+      const keyword = round === 2
+        ? algo.secondRoundCats[0] || '포차'
+        : getCategoryKeyword(algo.topCats);
+
+      // 카카오 키워드 장소 검색
+      const kakaoRes = await fetch(
+        `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(keyword)}&x=${state.lng}&y=${state.lat}&radius=1000&size=15&sort=distance`,
+        { headers: { Authorization: `KakaoAK ${KAKAO_KEY}` } }
+      );
+      const kakaoData = await kakaoRes.json();
+      const places = kakaoData.documents || [];
+
+      if (places.length === 0) {
+        showResults(getFallbackData(round), round);
+        return;
+      }
+
+      // 상위 장소들을 Claude AI로 필터링·정렬·주문조합 생성
+      const placeList = places.slice(0, 8).map(p => ({
+        name: p.place_name,
+        address: p.road_address_name || p.address_name,
+        distance: p.distance,
+        category: p.category_name,
+        phone: p.phone,
+        url: p.place_url,
+        id: p.id
+      }));
+
+      updateLoadingMsg('AI가 최적 맛집을 선별하는 중...');
+
+      const priceRange = state.price === '저가' ? '5,000~12,000원'
+        : state.price === '중가' ? '13,000~35,000원' : '35,000원 이상';
+      const isJa = state.lang === 'ja';
+      const langNote = isJa ? '\n⚠️ 모든 설명 텍스트를 일본어로 작성하세요.' : '';
+
+      const filterPrompt = `한국 맛집 큐레이터입니다.
+
+아래는 카카오맵에서 검색된 실제 식당 목록입니다:
+${JSON.stringify(placeList, null, 2)}
+
+조건:
+- 식사: ${state.meal} / 인원: ${state.count}명 / 동행: ${state.companion} / 가격대: ${state.price} (${priceRange})
+- 분위기: ${algo.vibeKeywords.join(', ')}
+
+위 목록에서 조건에 가장 잘 맞는 3곳을 선택해 아래 JSON으로 출력하세요.
+반드시 place_id는 원래 id 값을 그대로 사용하세요.${langNote}
+
+JSON만 출력:
+[{"place_id":"카카오place_id","name":"실제식당명","category":"음식종류","rating":4.5,"distance":"도보 N분","address":"주소","phone":"전화번호","pricePerPerson":"예상금액/인","parking":true,"parkingNote":"주차안내","description":"한줄소개","tags":["태그1","태그2","태그3"],"recommend":"추천이유","signature":"시그니처메뉴","orderCombo":[{"menu":"메뉴명","unitPrice":"단가","qty":${state.count},"totalPrice":"총액","isSignature":true}]}]`;
+
+      const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 2000,
-          messages: [{ role: 'user', content: buildPrompt(round) }]
+          messages: [{ role: 'user', content: filterPrompt }]
         })
       });
 
-      const data = await res.json();
-      const text = data.content.map(b => b.text || '').join('');
-      const clean = text.replace(/```json|```/g, '').trim();
+      const aiData = await aiRes.json();
+      const aiText = aiData.content.map(b => b.text || '').join('');
+      const clean = aiText.replace(/```json|```/g, '').trim();
       const restaurants = JSON.parse(clean);
+
+      // 카카오 이미지 검색으로 식당별 사진 추가
+      updateLoadingMsg('음식 사진을 불러오는 중...');
+      for (const r of restaurants) {
+        try {
+          const imgRes = await fetch(
+            `https://dapi.kakao.com/v2/search/image?query=${encodeURIComponent(r.name + ' ' + (r.signature || r.category) + ' 음식')}&size=1`,
+            { headers: { Authorization: `KakaoAK ${KAKAO_KEY}` } }
+          );
+          const imgData = await imgRes.json();
+          if (imgData.documents?.[0]) {
+            r.photoUrl = imgData.documents[0].thumbnail_url || imgData.documents[0].image_url;
+          }
+        } catch (e) { /* 사진 없으면 이모지 사용 */ }
+      }
 
       if (round === 1) state.firstRoundNames = restaurants.map(r => r.name);
       showResults(restaurants, round);
+
     } catch (e) {
+      console.error('검색 오류:', e);
       showResults(getFallbackData(round), round);
     }
   }
@@ -1808,38 +1896,18 @@ JSON만 출력 (다른 텍스트 절대 금지):
         ? `<div style="position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,0.65);color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;backdrop-filter:blur(4px);">★ ${r.signature}</div>`
         : '';
 
-      // 카테고리별 정확히 매핑된 음식 사진 (Wikimedia Commons - 공개 도메인)
-      const foodPhotos = {
-        '한식':       'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Koreafood.jpg/640px-Koreafood.jpg',
-        '고기집':     'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Korean.food-Bulgogi-01.jpg/640px-Korean.food-Bulgogi-01.jpg',
-        '고기구이':   'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Korean.food-Bulgogi-01.jpg/640px-Korean.food-Bulgogi-01.jpg',
-        '일식':       'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Sushi_platter.jpg/640px-Sushi_platter.jpg',
-        '일식코스':   'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Sushi_platter.jpg/640px-Sushi_platter.jpg',
-        '중식':       'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Fried_rice_-_prepared.jpg/640px-Fried_rice_-_prepared.jpg',
-        '분식':       'https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Tteok-bokki_with_fish_cake.jpg/640px-Tteok-bokki_with_fish_cake.jpg',
-        '해물':       'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Korean_seafood_01.jpg/640px-Korean_seafood_01.jpg',
-        '양식':       'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Filet_mignon.jpg/640px-Filet_mignon.jpg',
-        '파인다이닝': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Filet_mignon.jpg/640px-Filet_mignon.jpg',
-        '한정식':     'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Koreafood.jpg/640px-Koreafood.jpg',
-        '경양식':     'https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Pork_tonkatsu.jpg/640px-Pork_tonkatsu.jpg',
-        '국밥':       'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Haejang-guk.jpg/640px-Haejang-guk.jpg',
-        '한식백반':   'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Koreafood.jpg/640px-Koreafood.jpg',
-        '라멘':       'https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Shoyu_ramen%2C_at_Kasukabe_Station_%282014.05.05%29_1.jpg/640px-Shoyu_ramen%2C_at_Kasukabe_Station_%282014.05.05%29_1.jpg',
-        '덮밥':       'https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Oyakodon.jpg/640px-Oyakodon.jpg',
-        '냉면':       'https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Korean.food-Naengmyeon-01.jpg/640px-Korean.food-Naengmyeon-01.jpg',
-        '술집·포차':  'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Korean_fried_chicken_2.jpg/640px-Korean_fried_chicken_2.jpg',
-        '일식주점':   'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Yakitori_by_tontantravel.jpg/640px-Yakitori_by_tontantravel.jpg',
-        '바·라운지':  'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Long_Island_Iced_Tea_Cocktail.jpg/480px-Long_Island_Iced_Tea_Cocktail.jpg',
-      };
-      const finalPhotoUrl = foodPhotos[r.category]
-        || 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Koreafood.jpg/640px-Koreafood.jpg';
+      // 사진: 카카오 이미지 검색 결과 우선, 없으면 카테고리 이모지
+      const finalPhotoUrl = r.photoUrl || null;
 
       return `
       <div class="restaurant-card" style="--i: ${i}">
         <div class="r-photo-wrap" style="position:relative;">
-          <img src="${finalPhotoUrl}" alt="${r.category}" loading="lazy" style="display:block;"
-            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-          <div class="r-photo-placeholder" style="display:none">${catEmoji}</div>
+          ${finalPhotoUrl
+            ? `<img src="${finalPhotoUrl}" alt="${r.name}" loading="lazy" style="display:block;width:100%;height:160px;object-fit:cover;"
+                onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+               <div class="r-photo-placeholder" style="display:none">${catEmoji}</div>`
+            : `<div class="r-photo-placeholder">${catEmoji}</div>`
+          }
           ${sigMenuBadge}
         </div>
         <div class="r-header">
@@ -1872,7 +1940,7 @@ JSON만 출력 (다른 텍스트 절대 금지):
           </div>
         </div>` : ''}
         <div class="r-footer">
-          <button class="r-action" onclick="openMap('${r.name}', '${r.category}')">${t('mapBtn')}</button>
+          <button class="r-action" onclick="openMap('${r.name}', '${r.category}', '${r.place_id || ''}')">${t('mapBtn')}</button>
           <button class="r-action" onclick="searchMore('${r.name}', '${r.category}')">${t('searchMoreBtn')}</button>
         </div>
         <button class="r-queue-btn" onclick="openQueueModal('${r.name.replace(/'/g,"\\'")}')">
@@ -1901,19 +1969,18 @@ JSON만 출력 (다른 텍스트 절대 금지):
     }
   }
 
-  function openMap(name, category) {
-    // 가상 식당명 대신 카테고리+위치로 실제 검색
-    const searchTerm = category
-      ? encodeURIComponent((state.locationName || '') + ' ' + category)
-      : encodeURIComponent((state.locationName || '') + ' 맛집');
-    window.open(`https://map.naver.com/v5/search/${searchTerm}`, '_blank');
+  function openMap(name, category, placeId) {
+    if (placeId) {
+      window.open(`https://place.map.kakao.com/${placeId}`, '_blank');
+    } else {
+      const q = encodeURIComponent((state.locationName || '') + ' ' + (category || name));
+      window.open(`https://map.kakao.com/link/search/${q}`, '_blank');
+    }
   }
 
   function searchMore(name, category) {
-    const searchTerm = category
-      ? encodeURIComponent((state.locationName || '') + ' ' + category + ' 맛집')
-      : encodeURIComponent((state.locationName || '') + ' 맛집');
-    window.open(`https://search.naver.com/search.naver?query=${searchTerm}`, '_blank');
+    const q = encodeURIComponent((state.locationName || '') + ' ' + name);
+    window.open(`https://search.naver.com/search.naver?query=${q}`, '_blank');
   }
 
   function startSecondRound() {
