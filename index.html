@@ -1533,6 +1533,9 @@
     </div>
   </div>
 
+  <!-- 리뷰어 프로필 페이지 -->
+  <div id="reviewerProfileSection" class="hidden"></div>
+
   <!-- 식당 상세 페이지 -->
   <div id="detailSection" class="hidden detail-page"></div>
 
@@ -2606,6 +2609,236 @@ JSON만 출력:
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  // ── 리뷰어 프로필 페이지
+  async function openReviewerProfile(encodedAuthor, encodedCompany, initials, encodedPhoto, gradeEmoji, totalCount, weekCount) {
+    const author = decodeURIComponent(encodedAuthor);
+    const company = decodeURIComponent(encodedCompany);
+    const photoUrl = decodeURIComponent(encodedPhoto);
+    const isMine = currentUser && currentUser.nickname === author;
+    const grade = getGrade(totalCount);
+
+    // 해당 유저의 리뷰 불러오기
+    let recentReviews = [];
+    try {
+      const allKeys = await store.list('review:');
+      for (const key of (allKeys || [])) {
+        try {
+          const val = await store.get(key);
+          if (!val) continue;
+          const rv = JSON.parse(val);
+          if (rv.author === author) recentReviews.push(rv);
+        } catch(e) {}
+      }
+      recentReviews.sort((a, b) => parseInt(b.id) - parseInt(a.id));
+    } catch(e) {}
+
+    // TOP10 불러오기
+    let top10 = [];
+    try {
+      const val = await store.get(`top10:${author}`);
+      if (val) top10 = JSON.parse(val);
+    } catch(e) {}
+
+    // 샘플 데이터 (실제 리뷰 없을 때)
+    if (recentReviews.length === 0) {
+      recentReviews = [
+        { restaurant: '대풍숯불', rating: 5, text: '한우가 정말 맛있어요! 다음에도 꼭 올 것 같아요.', date: '2026.03.15', category: '고기집' },
+        { restaurant: '스시 미도리', rating: 4, text: '점심 오마카세 가성비 최고입니다.', date: '2026.03.12', category: '일식' },
+        { restaurant: '별미해물탕', rating: 5, text: '해물이 신선하고 국물이 진해요!', date: '2026.03.08', category: '해물' },
+      ];
+    }
+    if (top10.length === 0 && isMine) {
+      top10 = [];
+    } else if (top10.length === 0) {
+      top10 = [
+        { name: '대풍숯불', category: '고기집', rating: 5, memo: '직장인 회식 최고 맛집' },
+        { name: '스시 미도리', category: '일식', rating: 5, memo: '점심 오마카세 가성비 굿' },
+        { name: '별미해물탕', category: '해물', rating: 4, memo: '단체 회식 추천' },
+      ];
+    }
+
+    const avatarHtml = photoUrl
+      ? `<img src="${photoUrl}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid ${grade.color};">`
+      : `<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,${grade.color},#c45c1a);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;border:3px solid ${grade.color};">${initials}</div>`;
+
+    const top10Html = top10.length > 0
+      ? top10.map((item, idx) => `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);margin-bottom:8px;">
+          <span style="font-size:16px;font-weight:700;color:var(--accent);min-width:24px;text-align:center;">${idx+1}</span>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:700;color:var(--text);">${item.name}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${item.category} · ${'★'.repeat(item.rating||5)}</div>
+            ${item.memo ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">💬 ${item.memo}</div>` : ''}
+          </div>
+          ${isMine ? `<button onclick="removeTop10(${idx},'${encodeURIComponent(author)}')" style="font-size:11px;color:#e07070;background:none;border:none;cursor:pointer;padding:4px;">✕</button>` : ''}
+        </div>`).join('')
+      : `<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">${isMine ? '아직 TOP10이 없어요. 아래에서 추가해보세요!' : '아직 등록된 TOP10이 없어요.'}</div>`;
+
+    const addTop10Form = isMine ? `
+      <div style="background:var(--surface2);border:1px dashed var(--border);border-radius:10px;padding:12px;margin-top:8px;">
+        <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px;">+ 맛집 추가 (최대 10개)</div>
+        <input id="top10Name" class="community-input" style="width:100%;margin-bottom:6px;" placeholder="식당 이름" type="text">
+        <input id="top10Category" class="community-input" style="width:100%;margin-bottom:6px;" placeholder="카테고리 (예: 고기집, 일식)" type="text">
+        <input id="top10Memo" class="community-input" style="width:100%;margin-bottom:8px;" placeholder="한줄 추천 이유" type="text">
+        <button class="community-btn" style="width:100%;" onclick="addTop10Item('${encodeURIComponent(author)}')">추가하기</button>
+        <div id="top10Msg" style="font-size:11px;text-align:center;margin-top:4px;min-height:14px;"></div>
+      </div>` : '';
+
+    const recentHtml = recentReviews.slice(0, 5).map(rv => `
+      <div style="padding:10px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);margin-bottom:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <span style="font-size:13px;font-weight:700;color:var(--text);">${rv.restaurant}</span>
+          <span style="font-size:12px;color:var(--accent);">${'★'.repeat(rv.rating||5)}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">${rv.category || ''} · ${rv.date || ''}</div>
+        <div style="font-size:12px;color:var(--text-muted);">${rv.text || ''}</div>
+      </div>`).join('');
+
+    const profileEl = document.getElementById('reviewerProfileSection');
+    profileEl.innerHTML = `
+      <button class="detail-back-btn" onclick="closeReviewerProfile()">← 돌아가기</button>
+
+      <!-- 프로필 헤더 -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:14px;text-align:center;">
+        <div style="display:flex;justify-content:center;margin-bottom:12px;">${avatarHtml}</div>
+        <div style="font-family:'Jua',sans-serif;font-size:20px;color:var(--text);">${author}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${company}</div>
+        <div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:rgba(232,160,69,0.1);border:1px solid rgba(232,160,69,0.2);border-radius:20px;padding:4px 14px;">
+          <span style="font-size:16px;">${gradeEmoji}</span>
+          <span style="font-size:13px;font-weight:700;color:${grade.color};">${grade.name}</span>
+        </div>
+        <div style="display:flex;justify-content:center;gap:24px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+          <div style="text-align:center;">
+            <div style="font-size:18px;font-weight:700;color:var(--accent);">${totalCount}</div>
+            <div style="font-size:11px;color:var(--text-muted);">누적 리뷰</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:18px;font-weight:700;color:var(--accent);">${weekCount}</div>
+            <div style="font-size:11px;color:var(--text-muted);">이번 주</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:18px;font-weight:700;color:var(--accent);">${top10.length}</div>
+            <div style="font-size:11px;color:var(--text-muted);">TOP10</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TOP 10 -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px;">
+        <div style="font-family:'Jua',sans-serif;font-size:15px;color:var(--text);margin-bottom:12px;">👑 ${isMine ? '내가 추천하는' : author + '님의'} 맛집 TOP 10</div>
+        ${top10Html}
+        ${addTop10Form}
+      </div>
+
+      <!-- 최근 다녀간 음식점 -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px;">
+        <div style="font-family:'Jua',sans-serif;font-size:15px;color:var(--text);margin-bottom:12px;">🕐 최근 다녀간 음식점</div>
+        ${recentHtml || '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">아직 리뷰가 없어요.</div>'}
+      </div>
+    `;
+
+    // 현재 탭 저장 후 프로필 표시
+    window._prevTab = document.getElementById('tabCommunity').classList.contains('active') ? 'community' : 'recommend';
+    window._hadResults = !document.getElementById('resultsSection').classList.contains('hidden');
+    hideAllSections();
+    profileEl.classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function hideAllSections() {
+    document.getElementById('formSection').classList.add('hidden');
+    document.getElementById('loadingSection').classList.add('hidden');
+    document.getElementById('resultsSection').classList.add('hidden');
+    document.getElementById('detailSection').classList.add('hidden');
+    document.getElementById('communitySection').classList.add('hidden');
+    document.getElementById('reviewerProfileSection').classList.add('hidden');
+    document.getElementById('locationBarTop').classList.add('hidden');
+    document.getElementById('stepsBar').classList.add('hidden');
+  }
+
+  function closeReviewerProfile() {
+    document.getElementById('reviewerProfileSection').classList.add('hidden');
+    document.getElementById('reviewerProfileSection').innerHTML = '';
+
+    if (window._prevTab === 'community') {
+      // 커뮤니티 탭으로 복귀
+      document.getElementById('locationBarTop').classList.remove('hidden');
+      document.getElementById('stepsBar').classList.add('hidden');
+      document.getElementById('formSection').classList.add('hidden');
+      document.getElementById('resultsSection').classList.add('hidden');
+      document.getElementById('loadingSection').classList.add('hidden');
+      document.getElementById('communitySection').classList.remove('hidden');
+      document.getElementById('tabRecommend').classList.remove('active');
+      document.getElementById('tabCommunity').classList.add('active');
+      loadReviews();
+    } else {
+      // 맛집 추천 탭으로 복귀 - 결과가 있으면 결과로, 없으면 폼으로
+      document.getElementById('communitySection').classList.add('hidden');
+      document.getElementById('tabRecommend').classList.add('active');
+      document.getElementById('tabCommunity').classList.remove('active');
+      document.getElementById('locationBarTop').classList.remove('hidden');
+      document.getElementById('stepsBar').classList.remove('hidden');
+
+      const hadResults = window._hadResults;
+      if (hadResults) {
+        document.getElementById('resultsSection').classList.remove('hidden');
+        document.getElementById('formSection').classList.add('hidden');
+      } else {
+        document.getElementById('formSection').classList.remove('hidden');
+        document.getElementById('resultsSection').classList.add('hidden');
+      }
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── TOP10 추가
+  async function addTop10Item(encodedAuthor) {
+    const author = decodeURIComponent(encodedAuthor);
+    const name = document.getElementById('top10Name').value.trim();
+    const category = document.getElementById('top10Category').value.trim();
+    const memo = document.getElementById('top10Memo').value.trim();
+    const msg = document.getElementById('top10Msg');
+
+    if (!name) { msg.innerHTML = '<span style="color:#e07070">식당 이름을 입력해주세요.</span>'; return; }
+
+    let top10 = [];
+    try {
+      const val = await store.get(`top10:${author}`);
+      if (val) top10 = JSON.parse(val);
+    } catch(e) {}
+
+    if (top10.length >= 10) { msg.innerHTML = '<span style="color:#e07070">최대 10개까지만 추가할 수 있어요.</span>'; return; }
+    if (top10.find(t => t.name === name)) { msg.innerHTML = '<span style="color:#e07070">이미 추가된 식당이에요.</span>'; return; }
+
+    top10.push({ name, category: category || '기타', rating: 5, memo });
+    await store.set(`top10:${author}`, JSON.stringify(top10));
+
+    msg.innerHTML = '<span style="color:#6fcf6f">✅ 추가됐어요!</span>';
+    document.getElementById('top10Name').value = '';
+    document.getElementById('top10Category').value = '';
+    document.getElementById('top10Memo').value = '';
+
+    setTimeout(() => {
+      const grade = getGrade(currentUser?.reviewCount || 0);
+      openReviewerProfile(encodedAuthor, encodeURIComponent(currentUser?.company || ''), currentUser?.initials || '?', encodeURIComponent(currentUser?.photoUrl || ''), grade.emoji, currentUser?.reviewCount || 0, 0);
+    }, 500);
+  }
+
+  // ── TOP10 삭제
+  async function removeTop10(idx, encodedAuthor) {
+    const author = decodeURIComponent(encodedAuthor);
+    let top10 = [];
+    try {
+      const val = await store.get(`top10:${author}`);
+      if (val) top10 = JSON.parse(val);
+    } catch(e) {}
+
+    top10.splice(idx, 1);
+    await store.set(`top10:${author}`, JSON.stringify(top10));
+
+    const grade = getGrade(currentUser?.reviewCount || 0);
+    openReviewerProfile(encodedAuthor, encodeURIComponent(currentUser?.company || ''), currentUser?.initials || '?', encodeURIComponent(currentUser?.photoUrl || ''), grade.emoji, currentUser?.reviewCount || 0, 0);
+  }
   function goToCommunity() {
     switchTab('community');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2987,13 +3220,18 @@ JSON만 출력:
         const avatarHtml = r.photoUrl
           ? `<img src="${r.photoUrl}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1.5px solid ${grade.color};">`
           : `<div class="review-avatar" style="border-color:${grade.color};color:${grade.color};">${r.initials || '?'}</div>`;
+        const encodedAuthor = encodeURIComponent(r.author);
+        const encodedCompany = encodeURIComponent(r.company);
+        const encodedPhoto = encodeURIComponent(r.photoUrl || '');
         return `
         <div class="review-card">
           <div class="review-header">
-            ${avatarHtml}
+            <div onclick="openReviewerProfile('${encodedAuthor}','${encodedCompany}','${r.initials||'?'}','${encodedPhoto}','${grade.emoji}',${r.reviewCount||1},0)" style="cursor:pointer;">
+              ${avatarHtml}
+            </div>
             <div class="review-meta">
               <div class="review-author">
-                ${r.author}
+                <span onclick="openReviewerProfile('${encodedAuthor}','${encodedCompany}','${r.initials||'?'}','${encodedPhoto}','${grade.emoji}',${r.reviewCount||1},0)" style="cursor:pointer;text-decoration:underline dotted;">${r.author}</span>
                 <span style="font-size:11px;color:var(--text-muted);font-weight:400;"> · ${r.company}</span>
                 <span style="font-size:11px;background:rgba(232,160,69,0.12);color:${grade.color};border-radius:4px;padding:1px 6px;margin-left:4px;">${grade.emoji} ${grade.name}</span>
               </div>
@@ -3105,8 +3343,13 @@ JSON만 출력:
     const avatarHtml = u.photoUrl
       ? `<img src="${u.photoUrl}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid ${borderColors[colorIdx]};flex-shrink:0;">`
       : `<div style="width:36px;height:36px;border-radius:50%;background:${gradients[colorIdx]};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;border:2px solid ${borderColors[colorIdx]};">${u.initials}</div>`;
+    const encodedAuthor = encodeURIComponent(u.author);
+    const encodedCompany = encodeURIComponent(u.company);
+    const encodedPhoto = encodeURIComponent(u.photoUrl || '');
     return `
-      <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);">
+      <div onclick="openReviewerProfile('${encodedAuthor}','${encodedCompany}','${u.initials}','${encodedPhoto}','${u.grade}',${u.count},${u.weekCount||0})"
+           style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;"
+           onmouseover="this.style.background='rgba(232,160,69,0.05)'" onmouseout="this.style.background=''">
         <span style="font-size:${isMedal?'18':'13'}px;min-width:24px;text-align:center;color:var(--text-muted);">${rankMark}</span>
         ${avatarHtml}
         <div style="flex:1;min-width:0;">
@@ -3122,6 +3365,7 @@ JSON만 출력:
             <span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">이번주 ${u.weekCount||0}개 · 누적 ${u.count}개</span>
           </div>
         </div>
+        <span style="font-size:11px;color:var(--text-muted);">›</span>
       </div>`;
   }
 
