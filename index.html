@@ -1126,6 +1126,35 @@
   }
   .logout-btn:hover { color: var(--accent); }
 
+  /* 프로필 사진 업로드 */
+  .profile-photo-wrap {
+    position: relative;
+    width: 48px; height: 48px;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  .profile-photo-wrap img {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--accent);
+    display: block;
+  }
+
+  .profile-photo-edit {
+    position: absolute;
+    bottom: -2px; right: -2px;
+    width: 18px; height: 18px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    border: 1.5px solid var(--bg);
+  }
+
+  .profile-photo-input { display: none; }
+
   /* 리뷰 작성 폼 */
   .review-form {
     background: var(--surface);
@@ -1273,6 +1302,31 @@
   }
 
   .lang-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* 클릭 네비게이션 */
+  .restaurant-card { cursor: pointer; }
+  .detail-page { animation: slideUp 0.3s ease forwards; }
+  .detail-back-btn {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px;
+    color: var(--text-muted); font-family: 'Jua', sans-serif;
+    font-size: 14px; cursor: pointer; margin-bottom: 16px;
+    width: fit-content; transition: all 0.2s;
+  }
+  .detail-back-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .detail-hero { width:100%; height:200px; object-fit:cover; border-radius:14px; margin-bottom:16px; display:block; }
+  .detail-hero-placeholder { width:100%; height:200px; border-radius:14px; background:var(--surface2); display:flex; align-items:center; justify-content:center; font-size:64px; margin-bottom:16px; }
+  .detail-name { font-family:'Jua',sans-serif; font-size:22px; color:var(--text); margin-bottom:4px; }
+  .detail-section { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:12px; }
+  .detail-section-title { font-family:'Jua',sans-serif; font-size:14px; color:var(--accent); margin-bottom:10px; }
+  .detail-info-row { display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text-muted); padding:6px 0; border-bottom:1px solid var(--border); }
+  .detail-info-row:last-child { border-bottom:none; }
+  .detail-info-val { color:var(--text); margin-left:auto; font-weight:500; }
+  .detail-action-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+  .detail-action-btn { padding:14px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface); color:var(--text); font-family:'Jua',sans-serif; font-size:14px; cursor:pointer; transition:all 0.2s; text-align:center; }
+  .detail-action-btn:hover { border-color:var(--accent); color:var(--accent); background:rgba(232,160,69,0.07); }
+  .detail-action-btn.primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none; color:#fff; }
 </style>
 </head>
 <body>
@@ -1286,18 +1340,83 @@
   </div>
 
   <header>
-    <div class="logo-wrap">
+    <div class="logo-wrap" onclick="goHome()" style="cursor:pointer;">
       <div class="logo-icon-combo">
         <span class="logo-emoji-main">🍽️</span>
         <span class="logo-emoji-sub">💼</span>
       </div>
     </div>
-    <div class="logo-title">
+    <div class="logo-title" onclick="goHome()" style="cursor:pointer;">
       <span class="word-mat">맛있는</span>
       <span class="dot-sep"></span>
       <span class="word-jik">직장인</span>
     </div>
     <p class="subtitle">조건을 선택하면 주변 맛집을 찾아드려요 🍴</p>
+
+    <!-- 리뷰어 순위 위젯 (로고 바로 아래) -->
+    <div id="rankingWidget" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-top:14px;text-align:left;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <span style="font-family:'Jua',sans-serif;font-size:14px;color:var(--text);">🏆 금주의 맛집 리뷰어 TOP 3</span>
+        <button id="rankingMoreBtn" style="font-size:11px;color:var(--accent);background:none;border:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;padding:4px 8px;" onclick="toggleRanking()">전체 보기 ▼</button>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-bottom:10px;">이번 주 가장 활발한 리뷰어예요</div>
+      <div id="rankingList">
+        <!-- 1위 -->
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:18px;min-width:24px;text-align:center;">🥇</span>
+          <img src="https://api.dicebear.com/7.x/personas/svg?seed=kimhungry&backgroundColor=ffdfbf&skinColor=f5cfa0" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #e8a045;flex-shrink:0;">
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+              <span style="font-size:12px;font-weight:700;color:var(--text);">kim_hungry</span>
+              <span style="font-size:10px;color:var(--text-muted);">· 삼구아이앤씨</span>
+              <span style="font-size:11px;">🌟</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
+              <div style="flex:1;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;">
+                <div style="height:100%;width:94%;background:linear-gradient(90deg,#e8a045,#c45c1a);border-radius:2px;"></div>
+              </div>
+              <span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">이번주 7개 · 누적 47개</span>
+            </div>
+          </div>
+        </div>
+        <!-- 2위 -->
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:18px;min-width:24px;text-align:center;">🥈</span>
+          <img src="https://api.dicebear.com/7.x/personas/svg?seed=lunchpro&backgroundColor=d1d4f9&skinColor=f5cfa0" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #5DCAA5;flex-shrink:0;">
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+              <span style="font-size:12px;font-weight:700;color:var(--text);">lunch_pro</span>
+              <span style="font-size:10px;color:var(--text-muted);">· 서한산업</span>
+              <span style="font-size:11px;">🌟</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
+              <div style="flex:1;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;">
+                <div style="height:100%;width:64%;background:linear-gradient(90deg,#5DCAA5,#0F6E56);border-radius:2px;"></div>
+              </div>
+              <span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">이번주 5개 · 누적 32개</span>
+            </div>
+          </div>
+        </div>
+        <!-- 3위 -->
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 0;">
+          <span style="font-size:18px;min-width:24px;text-align:center;">🥉</span>
+          <img src="https://api.dicebear.com/7.x/personas/svg?seed=foodhunter&backgroundColor=c0aede&skinColor=edb98a" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #7F77DD;flex-shrink:0;">
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+              <span style="font-size:12px;font-weight:700;color:var(--text);">foodhunter</span>
+              <span style="font-size:10px;color:var(--text-muted);">· 지앤비시스템</span>
+              <span style="font-size:11px;">🏆</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
+              <div style="flex:1;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;">
+                <div style="height:100%;width:56%;background:linear-gradient(90deg,#7F77DD,#3C3489);border-radius:2px;"></div>
+              </div>
+              <span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">이번주 4개 · 누적 28개</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </header>
 
   <!-- 탭 네비게이션 -->
@@ -1310,10 +1429,10 @@
   <div class="location-bar-top" id="locationBarTop">
     <span class="loc-pin">📍</span>
     <div class="loc-info">
-      <div class="loc-name" id="locNameTop">위치 확인 중...</div>
-      <div class="loc-detail" id="locDetailTop">GPS 신호를 가져오는 중이에요</div>
+      <div class="loc-name" id="locNameTop">서울 중구 (기본값)</div>
+      <div class="loc-detail" id="locDetailTop">위치 권한을 허용하면 더 정확해요</div>
     </div>
-    <div class="loc-status-dot yellow" id="locDot"></div>
+    <div class="loc-status-dot" id="locDot"></div>
   </div>
 
   <!-- Step Progress -->
@@ -1414,6 +1533,9 @@
     </div>
   </div>
 
+  <!-- 식당 상세 페이지 -->
+  <div id="detailSection" class="hidden detail-page"></div>
+
   <!-- RESULTS -->
   <div id="resultsSection" class="hidden">
     <div class="results-header">
@@ -1453,31 +1575,86 @@
       <div class="login-card">
         <div class="login-card-icon">👥</div>
         <div class="login-card-title">직장인 맛집 커뮤니티</div>
-        <div class="login-card-desc">회사 이메일로 가입하고<br>동료들과 맛집 정보를 나눠보세요!</div>
+        <div class="login-card-desc">회사 이메일로만 가입 가능해요.<br>동료들과 솔직한 맛집 정보를 나눠보세요!</div>
         <div class="email-input-wrap">
-          <input class="community-input" type="email" id="emailInput" placeholder="회사 이메일 입력 (예: hong@company.com)">
-          <button class="community-btn" onclick="loginWithEmail()">가입·로그인</button>
+          <input class="community-input" type="email" id="emailInput" placeholder="회사 이메일 (gmail·naver 불가)">
+          <button class="community-btn" onclick="sendVerifyCode()">인증코드 받기</button>
         </div>
-        <div id="loginMsg" style="font-size:12px;color:var(--text-muted);margin-top:4px;"></div>
+        <!-- 인증코드 입력 (hidden → 코드 발송 후 표시) -->
+        <div id="verifyStep" class="hidden" style="margin-top:10px;">
+          <div class="email-input-wrap">
+            <input class="community-input" type="text" id="verifyInput" placeholder="6자리 인증코드 입력" maxlength="6" style="letter-spacing:4px;text-align:center;font-size:16px;">
+            <button class="community-btn" onclick="verifyAndLogin()">확인</button>
+          </div>
+        </div>
+        <div id="loginMsg" style="font-size:12px;margin-top:8px;line-height:1.6;"></div>
+        <!-- 등급 안내 -->
+        <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border);">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;font-weight:700;">🏆 리뷰 등급 시스템</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+            <div style="background:var(--surface2);border-radius:8px;padding:8px 6px;text-align:center;border:1px solid var(--border);">
+              <div style="font-size:18px;">🌱</div>
+              <div style="font-size:11px;font-weight:700;color:#4caf50;margin-top:2px;">새싹</div>
+              <div style="font-size:10px;color:var(--text-muted);">가입</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:8px 6px;text-align:center;border:1px solid var(--border);">
+              <div style="font-size:18px;">💼</div>
+              <div style="font-size:11px;font-weight:700;color:#e8a045;margin-top:2px;">직장인</div>
+              <div style="font-size:10px;color:var(--text-muted);">1개~</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:8px 6px;text-align:center;border:1px solid var(--border);">
+              <div style="font-size:18px;">🍽️</div>
+              <div style="font-size:11px;font-weight:700;color:#e8a045;margin-top:2px;">미식가</div>
+              <div style="font-size:10px;color:var(--text-muted);">3개~</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:8px 6px;text-align:center;border:1px solid var(--border);">
+              <div style="font-size:18px;">👑</div>
+              <div style="font-size:11px;font-weight:700;color:#f5b85a;margin-top:2px;">맛집왕</div>
+              <div style="font-size:10px;color:var(--text-muted);">7개~</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:8px 6px;text-align:center;border:1px solid var(--border);">
+              <div style="font-size:18px;">🏆</div>
+              <div style="font-size:11px;font-weight:700;color:#c45c1a;margin-top:2px;">푸드마스터</div>
+              <div style="font-size:10px;color:var(--text-muted);">15개~</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:8px 6px;text-align:center;border:1px solid var(--border);">
+              <div style="font-size:18px;">🌟</div>
+              <div style="font-size:11px;font-weight:700;color:#e8a045;margin-top:2px;">맛집레전드</div>
+              <div style="font-size:10px;color:var(--text-muted);">30개~</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- 로그인 후 -->
     <div id="loggedInArea" class="hidden">
       <!-- 유저 프로필 바 -->
-      <div class="user-bar">
-        <div class="user-avatar" id="userAvatar">?</div>
-        <div class="user-info">
-          <div class="user-name" id="userName"></div>
-          <div class="user-company" id="userCompany"></div>
+      <div class="user-bar" style="flex-direction:column;align-items:stretch;gap:10px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <!-- 프로필 사진 (클릭하면 업로드) -->
+          <div class="profile-photo-wrap" onclick="document.getElementById('profilePhotoInput').click()">
+            <img id="profilePhotoImg" src="" alt="프로필" style="display:none;">
+            <div class="user-avatar" id="userAvatar" style="width:48px;height:48px;font-size:16px;">?</div>
+            <div class="profile-photo-edit">📷</div>
+            <input type="file" id="profilePhotoInput" class="profile-photo-input" accept="image/*" onchange="uploadProfilePhoto(this)">
+          </div>
+          <div class="user-info" style="flex:1;">
+            <div class="user-name" id="userName"></div>
+            <div class="user-company" id="userCompany"></div>
+            <div id="userGrade" style="display:flex;align-items:center;gap:6px;margin-top:4px;"></div>
+          </div>
+          <button class="logout-btn" onclick="logout()">로그아웃</button>
         </div>
-        <button class="logout-btn" onclick="logout()">로그아웃</button>
+        <!-- 등급 프로그레스 바 -->
+        <div id="gradeProgress"></div>
       </div>
 
       <!-- 리뷰 작성 폼 -->
       <div class="review-form">
         <div class="review-form-title">📝 맛집 리뷰 남기기</div>
         <input class="community-input restaurant-name-input" type="text" id="reviewRestaurant" placeholder="식당 이름 입력">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">별점을 선택하세요</div>
         <div class="star-selector" id="starSelector">
           <button class="star-btn" onclick="setStar(1)" data-star="1">⭐</button>
           <button class="star-btn" onclick="setStar(2)" data-star="2">⭐</button>
@@ -1485,9 +1662,9 @@
           <button class="star-btn" onclick="setStar(4)" data-star="4">⭐</button>
           <button class="star-btn" onclick="setStar(5)" data-star="5">⭐</button>
         </div>
-        <textarea class="review-textarea" id="reviewText" rows="3" placeholder="맛, 분위기, 가격 등 솔직한 후기를 남겨주세요 😊"></textarea>
-        <button class="community-btn" onclick="submitReview()" style="width:100%;">리뷰 등록하기</button>
-        <div id="reviewMsg" style="font-size:12px;color:var(--text-muted);margin-top:6px;text-align:center;"></div>
+        <textarea class="review-textarea" id="reviewText" rows="3" placeholder="맛, 분위기, 가격 등 솔직한 후기를 남겨주세요 😊 (10자 이상)"></textarea>
+        <button class="community-btn" onclick="submitReview()" style="width:100%;">리뷰 등록 → 등급 UP 🏆</button>
+        <div id="reviewMsg" style="font-size:12px;margin-top:6px;text-align:center;min-height:18px;"></div>
       </div>
 
       <!-- 리뷰 목록 -->
@@ -1694,14 +1871,32 @@
     document.querySelector('.reset-btn').textContent = t('resetBtn');
   }
 
-  // Get location on page load
+  // Get location on page load — 즉시 기본값 표시 후 GPS 업데이트
   window.addEventListener('load', () => {
+    // 1. 즉시 기본값 표시 (기다리지 않음)
+    state.lat = 37.5665; state.lng = 126.9780;
+    state.locationName = '현재 위치 확인 중';
+    document.getElementById('locNameTop').textContent = '📍 위치 확인 중...';
+    document.getElementById('locDetailTop').textContent = '잠시만 기다려주세요';
+
+    // 2. 순위 즉시 로딩
+    loadRanking();
+
+    // 3. 로그인 상태 복원
+    const savedEmail = localStorage.getItem('matissun_current');
+    if (savedEmail) {
+      const saved = localStorage.getItem(`matissun_user_${savedEmail}`);
+      if (saved) {
+        try { currentUser = JSON.parse(saved); } catch(e) {}
+      }
+    }
+
+    // 4. GPS 백그라운드로 시도 (성공 시 업데이트)
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async pos => {
           state.lat = pos.coords.latitude;
           state.lng = pos.coords.longitude;
-          // Reverse geocode using nominatim
           try {
             const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${state.lat}&lon=${state.lng}&format=json&accept-language=ko`);
             const d = await r.json();
@@ -1727,11 +1922,12 @@
           document.getElementById('locDetailTop').textContent = '정확한 추천을 위해 위치 권한을 허용해주세요';
           document.getElementById('locDot').className = 'loc-status-dot';
         },
-        { timeout: 8000 }
+        { timeout: 5000 }
       );
     } else {
-      document.getElementById('locNameTop').textContent = '위치 사용 불가';
-      document.getElementById('locDetailTop').textContent = '브라우저가 위치 기능을 지원하지 않아요';
+      document.getElementById('locNameTop').textContent = '서울 중구 (기본값)';
+      document.getElementById('locDetailTop').textContent = '위치 기능을 사용할 수 없어요';
+      document.getElementById('locDot').className = 'loc-status-dot';
     }
   });
 
@@ -2222,16 +2418,21 @@ JSON만 출력:
         || foodPhotos[r.category]
         || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=300&fit=crop&auto=format';
 
+      // 식당 데이터를 전역 맵에 저장 (onclick에 JSON 직접 넣지 않음)
+      const rKey = `r_${i}_${Date.now()}`;
+      window._restaurantCache = window._restaurantCache || {};
+      window._restaurantCache[rKey] = r;
+
       return `
       <div class="restaurant-card" style="--i: ${i}">
-        <div class="r-photo-wrap" style="position:relative;">
+        <div class="r-photo-wrap" style="position:relative;cursor:pointer;" onclick="openDetail('${rKey}')">
           <img src="${finalPhotoUrl}" alt="${r.category}" loading="lazy"
             style="display:block;width:100%;height:160px;object-fit:cover;"
             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
           <div class="r-photo-placeholder" style="display:none">${catEmoji}</div>
           ${sigMenuBadge}
         </div>
-        <div class="r-header">
+        <div class="r-header" style="cursor:pointer;" onclick="openDetail('${rKey}')">
           <div class="r-rank ${i === 0 ? 'top' : ''}">${i + 1}</div>
           <div class="r-info">
             <div class="r-name">${r.name}</div>
@@ -2261,10 +2462,10 @@ JSON만 출력:
           </div>
         </div>` : ''}
         <div class="r-footer">
-          <button class="r-action" onclick="openMap('${r.name}', '${r.category}', '${r.place_id || ''}')">${t('mapBtn')}</button>
-          <button class="r-action" onclick="searchMore('${r.name}', '${r.category}')">${t('searchMoreBtn')}</button>
+          <button class="r-action" onclick="event.stopPropagation();openMap('${r.name}', '${r.category}', '${r.place_id || ''}')">${t('mapBtn')}</button>
+          <button class="r-action" onclick="event.stopPropagation();searchMore('${r.name}', '${r.category}')">${t('searchMoreBtn')}</button>
         </div>
-        <button class="r-queue-btn" onclick="openQueueModal('${r.name.replace(/'/g,"\\'")}')">
+        <button class="r-queue-btn" onclick="event.stopPropagation();openQueueModal('${r.name.replace(/'/g,"\\'")}')">
           ${t('queueBtn')}
         </button>
       </div>`;
@@ -2288,6 +2489,104 @@ JSON만 출력:
       `;
       document.getElementById('secondRoundBtn').classList.add('hidden');
     }
+  }
+
+  // ── 네비게이션
+  function goHome() {
+    // 상세 페이지 → 숨기기
+    document.getElementById('detailSection').classList.add('hidden');
+    document.getElementById('detailSection').innerHTML = '';
+    // 결과가 있으면 결과로, 없으면 폼으로
+    const hasResults = !document.getElementById('resultsSection').classList.contains('hidden');
+    if (!hasResults) {
+      switchTab('recommend');
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function openDetail(rKey) {
+    const r = window._restaurantCache?.[rKey];
+    if (!r) return;
+    const catEmoji = {
+      '한식':'🍲','고기구이':'🥩','고기집':'🥩','일식':'🍱','일식코스':'🍣',
+      '중식':'🥢','분식':'🍜','해물':'🦐','양식':'🍝','파인다이닝':'🍽️',
+      '한정식':'🍱','경양식':'🥩','술집·포차':'🍺','일식주점':'🍶','바·라운지':'🍸'
+    }[r.category] || '🍽️';
+
+    const foodPhotos = {
+      '한식':'https://images.unsplash.com/photo-1498654896293-37aacf113fd9?w=600&h=300&fit=crop&auto=format',
+      '고기집':'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&h=300&fit=crop&auto=format',
+      '고기구이':'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&h=300&fit=crop&auto=format',
+      '일식':'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&h=300&fit=crop&auto=format',
+      '해물':'https://images.unsplash.com/photo-1569144157591-c60f3f82f137?w=600&h=300&fit=crop&auto=format',
+      '분식':'https://images.unsplash.com/photo-1635363638580-c2809d049eee?w=600&h=300&fit=crop&auto=format',
+      '양식':'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=300&fit=crop&auto=format',
+      '파인다이닝':'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=300&fit=crop&auto=format',
+      '바·라운지':'https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=600&h=300&fit=crop&auto=format',
+    };
+    const photo = r.photoUrl || foodPhotos[r.category] || '';
+
+    const comboRows = (r.orderCombo || []).map(item => `
+      <div class="detail-info-row">
+        <span>${item.isSignature ? '⭐' : '·'} ${item.menu}</span>
+        <span class="detail-info-val">${item.unitPrice || ''} × ${item.qty || 1} = ${item.totalPrice || ''}</span>
+      </div>`).join('');
+
+    const detailEl = document.getElementById('detailSection');
+    detailEl.innerHTML = `
+      <button class="detail-back-btn" onclick="goHome()">← 목록으로</button>
+
+      ${photo
+        ? `<img src="${photo}" class="detail-hero" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        : ''}
+      <div class="detail-hero-placeholder" style="display:none">${catEmoji}</div>
+
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px;">
+        <div class="detail-name">${r.name}</div>
+        <div style="font-size:18px;font-weight:700;color:var(--accent);">★ ${r.rating}</div>
+      </div>
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">${r.category} · ${r.distance}</div>
+
+      ${r.signature ? `<div style="display:inline-block;background:rgba(232,160,69,0.12);border:1px solid rgba(232,160,69,0.3);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--accent);font-weight:700;margin-bottom:14px;">★ 시그니처: ${r.signature}</div>` : ''}
+
+      <div class="detail-action-row">
+        <button class="detail-action-btn primary" onclick="openMap('${r.name}','${r.category}','${r.place_id||''}')">🗺️ 지도 보기</button>
+        <button class="detail-action-btn" onclick="searchMore('${r.name}','${r.category}')">🔍 검색하기</button>
+      </div>
+      <button class="detail-action-btn" style="width:100%;margin-bottom:12px;" onclick="openQueueModal('${r.name.replace(/'/g,"\\'")}')">🙋 대신 줄서기 신청</button>
+
+      <div class="detail-section">
+        <div class="detail-section-title">📋 식당 정보</div>
+        <div class="detail-info-row"><span>💬 추천 이유</span><span class="detail-info-val" style="font-size:12px;text-align:right;max-width:60%;">${r.recommend || r.description || ''}</span></div>
+        <div class="detail-info-row"><span>💰 예상 금액</span><span class="detail-info-val">${r.pricePerPerson}/인</span></div>
+        <div class="detail-info-row"><span>${r.parking ? '🅿️ 주차' : '🚫 주차'}</span><span class="detail-info-val" style="font-size:12px;">${r.parkingNote || ''}</span></div>
+        ${r.phone ? `<div class="detail-info-row"><span>📞 전화</span><span class="detail-info-val"><a href="tel:${r.phone}" style="color:var(--accent)">${r.phone}</a></span></div>` : ''}
+        ${r.address ? `<div class="detail-info-row"><span>📍 주소</span><span class="detail-info-val" style="font-size:12px;">${r.address}</span></div>` : ''}
+      </div>
+
+      ${comboRows ? `
+      <div class="detail-section">
+        <div class="detail-section-title">🧾 추천 주문 조합 (${state.count}명)</div>
+        ${comboRows}
+      </div>` : ''}
+
+      <div class="detail-section">
+        <div class="detail-section-title">#️⃣ 태그</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          ${(r.tags || []).map(tag => `<span style="background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:12px;color:var(--text-muted);">#${tag}</span>`).join('')}
+        </div>
+      </div>
+    `;
+
+    // 화면 전환
+    document.getElementById('resultsSection').classList.add('hidden');
+    document.getElementById('detailSection').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function goToCommunity() {
+    switchTab('community');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function openMap(name, category, placeId) {
@@ -2371,61 +2670,178 @@ JSON만 출력:
     `;
   }
 
-  // ── 커뮤니티 상태
+  // ────────────────────────────────────────
+  // 커뮤니티 시스템
+  // ────────────────────────────────────────
+
   let currentUser = null;
   let selectedStar = 0;
+  let pendingEmail = '';
+  let verifyCode = '';
+
+  // ── 등급 시스템 (리멤버 스타일)
+  const GRADES = [
+    { min: 0,   max: 0,   name: '새싹',     emoji: '🌱', color: '#4caf50', desc: '첫 리뷰를 남겨보세요!' },
+    { min: 1,   max: 2,   name: '직장인',   emoji: '💼', color: '#e8a045', desc: '맛집 탐험 시작!' },
+    { min: 3,   max: 6,   name: '미식가',   emoji: '🍽️', color: '#e8a045', desc: '맛을 아는 직장인' },
+    { min: 7,   max: 14,  name: '맛집왕',   emoji: '👑', color: '#f5b85a', desc: '이 동네 맛집은 다 안다!' },
+    { min: 15,  max: 29,  name: '푸드마스터', emoji: '🏆', color: '#c45c1a', desc: '전설의 맛집 헌터' },
+    { min: 30,  max: 999, name: '맛집레전드', emoji: '🌟', color: '#e8a045', desc: '살아있는 맛집 백과사전' },
+  ];
+
+  function getGrade(reviewCount) {
+    return GRADES.find(g => reviewCount >= g.min && reviewCount <= g.max) || GRADES[0];
+  }
+
+  function getGradeProgress(reviewCount) {
+    const g = getGrade(reviewCount);
+    const next = GRADES[GRADES.indexOf(g) + 1];
+    if (!next) return 100;
+    const range = next.min - g.min;
+    const progress = reviewCount - g.min;
+    return Math.round((progress / range) * 100);
+  }
 
   // ── 탭 전환
   function switchTab(tab) {
     const isRecommend = tab === 'recommend';
     document.getElementById('tabRecommend').classList.toggle('active', isRecommend);
     document.getElementById('tabCommunity').classList.toggle('active', !isRecommend);
-
-    const recommendEls = ['locationBarTop','stepsBar','formSection','loadingSection','resultsSection'];
-    recommendEls.forEach(id => {
+    ['locationBarTop','stepsBar','formSection','loadingSection','resultsSection'].forEach(id => {
       const el = document.getElementById(id);
-      if (!el) return;
-      if (isRecommend) el.classList.remove('hidden-by-tab');
-      else el.classList.add('hidden-by-tab');
+      if (el) el.classList.toggle('hidden-by-tab', !isRecommend);
     });
-
-    const communityEl = document.getElementById('communitySection');
-    communityEl.classList.toggle('hidden', isRecommend);
-
-    if (!isRecommend) loadReviews();
+    document.getElementById('communitySection').classList.toggle('hidden', isRecommend);
+    if (!isRecommend) { renderCommunity(); loadReviews(); }
   }
 
-  // ── 이메일 로그인/가입
-  function loginWithEmail() {
+  // ── 이메일 인증 코드 발송 (시뮬레이션)
+  function sendVerifyCode() {
     const email = document.getElementById('emailInput').value.trim();
     const msg = document.getElementById('loginMsg');
+
     if (!email || !email.includes('@') || !email.includes('.')) {
-      msg.textContent = '올바른 이메일 주소를 입력해주세요.';
-      msg.style.color = '#e07070';
-      return;
+      msg.innerHTML = '<span style="color:#e07070">올바른 이메일을 입력해주세요.</span>'; return;
     }
-    const parts = email.split('@');
+
+    // 회사 이메일 도메인 검증 (gmail, naver, daum 등 개인 메일 제한)
+    const personalDomains = ['gmail.com','naver.com','daum.net','hanmail.net','kakao.com','hotmail.com','yahoo.com','outlook.com'];
+    const domain = email.split('@')[1]?.toLowerCase();
+    if (personalDomains.includes(domain)) {
+      msg.innerHTML = '<span style="color:#e07070">⚠️ 회사 이메일만 가입 가능해요. (개인 메일 불가)</span>'; return;
+    }
+
+    pendingEmail = email;
+    // 6자리 인증코드 생성 (실제 서비스에선 이메일 발송)
+    verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // 인증코드 입력창 표시
+    document.getElementById('verifyStep').classList.remove('hidden');
+    msg.innerHTML = `<span style="color:#6fcf6f">✅ 인증코드가 발송됐어요!</span><br><span style="color:var(--text-muted);font-size:11px;">테스트용 코드: <strong style="color:var(--accent)">${verifyCode}</strong></span>`;
+  }
+
+  // ── 인증코드 확인 & 가입
+  function verifyAndLogin() {
+    const input = document.getElementById('verifyInput').value.trim();
+    const msg = document.getElementById('loginMsg');
+
+    if (input !== verifyCode) {
+      msg.innerHTML = '<span style="color:#e07070">❌ 인증코드가 맞지 않아요.</span>'; return;
+    }
+
+    const parts = pendingEmail.split('@');
     const nickname = parts[0];
     const company = parts[1]?.split('.')[0] || '회사';
     const initials = nickname.slice(0,2).toUpperCase();
 
-    currentUser = { email, nickname, company, initials };
-    localStorage.setItem('matissun_user', JSON.stringify(currentUser));
+    currentUser = { email: pendingEmail, nickname, company, initials, reviewCount: 0 };
 
-    document.getElementById('loginArea').classList.add('hidden');
-    document.getElementById('loggedInArea').classList.remove('hidden');
-    document.getElementById('userAvatar').textContent = initials;
-    document.getElementById('userName').textContent = nickname;
-    document.getElementById('userCompany').textContent = company + ' 소속';
-    loadReviews();
+    // 기존 유저 정보 불러오기
+    const saved = localStorage.getItem(`matissun_user_${pendingEmail}`);
+    if (saved) {
+      try { currentUser = { ...currentUser, ...JSON.parse(saved) }; } catch(e) {}
+    }
+
+    localStorage.setItem(`matissun_user_${currentUser.email}`, JSON.stringify(currentUser));
+    localStorage.setItem('matissun_current', currentUser.email);
+
+    msg.innerHTML = '<span style="color:#6fcf6f">✅ 로그인 됐어요!</span>';
+    setTimeout(() => renderCommunity(), 600);
   }
 
   function logout() {
+    localStorage.removeItem('matissun_current');
     currentUser = null;
-    localStorage.removeItem('matissun_user');
-    document.getElementById('loginArea').classList.remove('hidden');
-    document.getElementById('loggedInArea').classList.add('hidden');
-    document.getElementById('emailInput').value = '';
+    renderCommunity();
+  }
+
+  // ── 프로필 사진 업로드
+  function uploadProfilePhoto(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target.result;
+      currentUser.photoUrl = dataUrl;
+      localStorage.setItem(`matissun_user_${currentUser.email}`, JSON.stringify(currentUser));
+      applyProfilePhoto(dataUrl);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function applyProfilePhoto(photoUrl) {
+    const img = document.getElementById('profilePhotoImg');
+    const avatar = document.getElementById('userAvatar');
+    if (photoUrl) {
+      img.src = photoUrl;
+      img.style.display = 'block';
+      avatar.style.display = 'none';
+    } else {
+      img.style.display = 'none';
+      avatar.style.display = 'flex';
+    }
+  }
+
+  // ── 커뮤니티 UI 렌더
+  function renderCommunity() {
+    if (!currentUser) {
+      document.getElementById('loginArea').classList.remove('hidden');
+      document.getElementById('loggedInArea').classList.add('hidden');
+      document.getElementById('verifyStep').classList.add('hidden');
+      document.getElementById('loginMsg').innerHTML = '';
+      document.getElementById('emailInput').value = '';
+    } else {
+      document.getElementById('loginArea').classList.add('hidden');
+      document.getElementById('loggedInArea').classList.remove('hidden');
+
+      const grade = getGrade(currentUser.reviewCount || 0);
+      const progress = getGradeProgress(currentUser.reviewCount || 0);
+      const nextGrade = GRADES[GRADES.indexOf(grade) + 1];
+
+      document.getElementById('userAvatar').textContent = currentUser.initials;
+      document.getElementById('userAvatar').style.borderColor = grade.color;
+      document.getElementById('userAvatar').style.color = grade.color;
+
+      // 저장된 프로필 사진 복원
+      applyProfilePhoto(currentUser.photoUrl || null);
+
+      document.getElementById('userName').textContent = currentUser.nickname;
+      document.getElementById('userCompany').textContent = currentUser.company + ' 소속';
+      document.getElementById('userGrade').innerHTML = `
+        <span style="font-size:16px;">${grade.emoji}</span>
+        <span style="font-size:13px;font-weight:700;color:${grade.color};">${grade.name}</span>
+        <span style="font-size:11px;color:var(--text-muted);">· 리뷰 ${currentUser.reviewCount || 0}개</span>
+      `;
+      document.getElementById('gradeProgress').innerHTML = `
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:4px;">
+          <span>${grade.name} ${grade.emoji}</span>
+          <span>${nextGrade ? nextGrade.name + ' ' + nextGrade.emoji + ' 까지 ' + (nextGrade.min - (currentUser.reviewCount||0)) + '개' : '최고 등급 달성! 🎉'}</span>
+        </div>
+        <div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;">
+          <div style="height:100%;width:${progress}%;background:${grade.color};border-radius:3px;transition:width 0.6s ease;"></div>
+        </div>
+      `;
+    }
   }
 
   // ── 별점 선택
@@ -2442,11 +2858,11 @@ JSON만 출력:
     const text = document.getElementById('reviewText').value.trim();
     const msg = document.getElementById('reviewMsg');
 
-    if (!restaurant) { msg.textContent = '식당 이름을 입력해주세요.'; msg.style.color='#e07070'; return; }
-    if (!selectedStar) { msg.textContent = '별점을 선택해주세요.'; msg.style.color='#e07070'; return; }
-    if (!text || text.length < 10) { msg.textContent = '리뷰를 10자 이상 작성해주세요.'; msg.style.color='#e07070'; return; }
+    if (!restaurant) { msg.innerHTML = '<span style="color:#e07070">식당 이름을 입력해주세요.</span>'; return; }
+    if (!selectedStar) { msg.innerHTML = '<span style="color:#e07070">별점을 선택해주세요.</span>'; return; }
+    if (!text || text.length < 10) { msg.innerHTML = '<span style="color:#e07070">리뷰를 10자 이상 작성해주세요.</span>'; return; }
 
-    msg.textContent = '등록 중...'; msg.style.color = 'var(--text-muted)';
+    msg.innerHTML = '<span style="color:var(--text-muted)">등록 중...</span>';
 
     const review = {
       id: Date.now().toString(),
@@ -2456,84 +2872,249 @@ JSON만 출력:
       author: currentUser.nickname,
       company: currentUser.company,
       initials: currentUser.initials,
+      email: currentUser.email,
+      photoUrl: currentUser.photoUrl || null,
       date: new Date().toLocaleDateString('ko-KR'),
-      location: state.locationName || '위치 미상'
+      location: state.locationName || '위치 미상',
+      reviewCount: (currentUser.reviewCount || 0) + 1
     };
 
     try {
-      await window.storage.set(`review:${review.id}`, JSON.stringify(review), true);
-      msg.textContent = '✅ 리뷰가 등록됐어요!'; msg.style.color = '#6fcf6f';
+      await store.set(`review:${review.id}`, JSON.stringify(review));
+
+      // 유저 리뷰 카운트 업데이트
+      currentUser.reviewCount = (currentUser.reviewCount || 0) + 1;
+      localStorage.setItem(`matissun_user_${currentUser.email}`, JSON.stringify(currentUser));
+
+      const newGrade = getGrade(currentUser.reviewCount);
+      const prevGrade = getGrade(currentUser.reviewCount - 1);
+      const gradeUp = newGrade.name !== prevGrade.name;
+
+      msg.innerHTML = gradeUp
+        ? `<span style="color:var(--accent)">🎉 등급 UP! ${newGrade.emoji} ${newGrade.name} 달성!</span>`
+        : `<span style="color:#6fcf6f">✅ 리뷰가 등록됐어요! (${newGrade.emoji} ${newGrade.name})</span>`;
+
       document.getElementById('reviewRestaurant').value = '';
       document.getElementById('reviewText').value = '';
       selectedStar = 0;
       document.querySelectorAll('.star-btn').forEach(b => b.classList.remove('active'));
-      setTimeout(() => { msg.textContent = ''; }, 2000);
+
+      renderCommunity();
+      setTimeout(() => { msg.innerHTML = ''; }, 3000);
       loadReviews();
-    } catch (e) {
-      msg.textContent = '등록 중 오류가 발생했어요. 다시 시도해주세요.';
-      msg.style.color = '#e07070';
+    } catch(e) {
+      msg.innerHTML = '<span style="color:#e07070">오류가 발생했어요. 다시 시도해주세요.</span>';
     }
   }
+
+  // ── Storage 헬퍼 (Storage API 없으면 localStorage 사용)
+  const store = {
+    async set(key, val) {
+      if (typeof window.storage !== 'undefined') {
+        try { await window.storage.set(key, val, true); return; } catch(e) {}
+      }
+      localStorage.setItem('matissun_' + key, val);
+    },
+    async list(prefix) {
+      if (typeof window.storage !== 'undefined') {
+        try {
+          const r = await window.storage.list(prefix, true);
+          if (r?.keys?.length > 0) return r.keys;
+        } catch(e) {}
+      }
+      return Object.keys(localStorage)
+        .filter(k => k.startsWith('matissun_' + prefix))
+        .map(k => k.replace('matissun_', ''));
+    },
+    async get(key) {
+      if (typeof window.storage !== 'undefined') {
+        try {
+          const r = await window.storage.get(key, true);
+          if (r?.value) return r.value;
+        } catch(e) {}
+      }
+      return localStorage.getItem('matissun_' + key);
+    }
+  };
 
   // ── 리뷰 불러오기
   async function loadReviews() {
     const listEl = document.getElementById('reviewList');
     const countEl = document.getElementById('reviewCountLabel');
-    listEl.innerHTML = `<div class="review-empty"><span class="review-empty-icon">🔄</span>불러오는 중...</div>`;
 
+    // 즉시 빈 상태 표시
+    countEl.textContent = '아직 리뷰가 없어요';
+    listEl.innerHTML = `<div class="review-empty"><span class="review-empty-icon">🍽️</span>첫 번째 리뷰를 남겨보세요!</div>`;
+
+    try {
+      const allKeys = await store.list('review:');
+      if (!allKeys || allKeys.length === 0) return;
+
+      countEl.textContent = `총 ${allKeys.length}개`;
+      const reviews = [];
+      for (const key of allKeys.slice(-30).reverse()) {
+        try {
+          const val = await store.get(key);
+          if (val) reviews.push(JSON.parse(val));
+        } catch(e) {}
+      }
+      if (reviews.length === 0) return;
+
+      listEl.innerHTML = reviews.map(r => {
+        const grade = getGrade(r.reviewCount || 1);
+        const avatarHtml = r.photoUrl
+          ? `<img src="${r.photoUrl}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1.5px solid ${grade.color};">`
+          : `<div class="review-avatar" style="border-color:${grade.color};color:${grade.color};">${r.initials || '?'}</div>`;
+        return `
+        <div class="review-card">
+          <div class="review-header">
+            ${avatarHtml}
+            <div class="review-meta">
+              <div class="review-author">
+                ${r.author}
+                <span style="font-size:11px;color:var(--text-muted);font-weight:400;"> · ${r.company}</span>
+                <span style="font-size:11px;background:rgba(232,160,69,0.12);color:${grade.color};border-radius:4px;padding:1px 6px;margin-left:4px;">${grade.emoji} ${grade.name}</span>
+              </div>
+              <div class="review-date">${r.date} · ${r.location}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <div class="review-restaurant">${r.restaurant}</div>
+            <div style="font-size:13px;letter-spacing:1px;color:var(--accent);">${'★'.repeat(r.rating)}<span style="color:var(--border);">${'★'.repeat(5-r.rating)}</span></div>
+          </div>
+          <div class="review-text">${r.text}</div>
+        </div>`;
+      }).join('');
+    } catch(e) { /* 오류 시 빈 상태 유지 */ }
+  }
+
+  // ── 메인 화면 리뷰어 순위
+  let rankingData = [];
+  let rankingExpanded = false;
+
+  function toggleRanking() {
+    rankingExpanded = !rankingExpanded;
+    const btn = document.getElementById('rankingMoreBtn');
+    btn.textContent = rankingExpanded ? '접기 ▲' : '전체 보기 ▼';
+    // rankingData가 로드된 경우 동적으로 렌더, 없으면 샘플로 채움
+    if (!rankingData || rankingData.length === 0) {
+      rankingData = [
+        { initials: 'KH', author: 'kim_hungry',  company: '삼구아이앤씨', count: 47, weekCount: 7, grade: '🌟', photoUrl: 'https://api.dicebear.com/7.x/personas/svg?seed=kimhungry&backgroundColor=ffdfbf&skinColor=f5cfa0' },
+        { initials: 'LP', author: 'lunch_pro',   company: '서한산업',     count: 32, weekCount: 5, grade: '🌟', photoUrl: 'https://api.dicebear.com/7.x/personas/svg?seed=lunchpro&backgroundColor=d1d4f9&skinColor=f5cfa0' },
+        { initials: 'FH', author: 'foodhunter',  company: '지앤비시스템',  count: 28, weekCount: 4, grade: '🏆', photoUrl: 'https://api.dicebear.com/7.x/personas/svg?seed=foodhunter&backgroundColor=c0aede&skinColor=edb98a' },
+        { initials: 'BJ', author: 'bab_jeok',    company: 'kakao',       count: 19, weekCount: 3, grade: '🏆', photoUrl: 'https://api.dicebear.com/7.x/personas/svg?seed=babjeok&backgroundColor=b6e3f4&skinColor=f5cfa0' },
+        { initials: 'MS', author: 'meal_star',   company: '네이버',       count: 14, weekCount: 2, grade: '👑', photoUrl: 'https://api.dicebear.com/7.x/personas/svg?seed=mealstar&backgroundColor=ffdfbf&skinColor=edb98a' },
+        { initials: 'PY', author: 'pasta_yang',  company: '현대자동차',   count: 11, weekCount: 2, grade: '👑', photoUrl: 'https://api.dicebear.com/7.x/personas/svg?seed=pastayang&backgroundColor=d1d4f9&skinColor=f5cfa0' },
+        { initials: 'RQ', author: 'ramen_queen', company: 'SK하이닉스',   count: 8,  weekCount: 1, grade: '🍽️', photoUrl: 'https://api.dicebear.com/7.x/personas/svg?seed=ramenqueen&backgroundColor=c0aede&skinColor=edb98a' },
+      ];
+    }
+    const shown = rankingExpanded ? rankingData : rankingData.slice(0, 3);
+    document.getElementById('rankingList').innerHTML = shown.map((u, i) => renderRankRow(u, i)).join('');
+  }
+
+  async function loadRanking() {
+    const rankEl = document.getElementById('rankingList');
+    const sample = [
+      { initials: 'KH', author: 'kim_hungry',  company: '삼구아이앤씨', count: 47, weekCount: 7, grade: '🌟', photoUrl: 'https://api.dicebear.com/7.x/personas/svg?seed=kimhungry&backgroundColor=ffdfbf&skinColor=f5cfa0' },
+      { initials: 'LP', author: 'lunch_pro',   company: '서한산업',     count: 32, weekCount: 5, grade: '🌟', photoUrl: 'https://api.dicebear.com/7.x/personas/svg?seed=lunchpro&backgroundColor=d1d4f9&skinColor=f5cfa0' },
+      { initials: 'FH', author: 'foodhunter',  company: '지앤비시스템',  count: 28, weekCount: 4, grade: '🏆', photoUrl: 'https://api.dicebear.com/7.x/personas/svg?seed=foodhunter&backgroundColor=c0aede&skinColor=edb98a' },
+      { initials: 'BJ', author: 'bab_jeok',    company: 'kakao',       count: 19, weekCount: 3, grade: '🏆', photoUrl: 'https://api.dicebear.com/7.x/personas/svg?seed=babjeok&backgroundColor=b6e3f4&skinColor=f5cfa0' },
+      { initials: 'MS', author: 'meal_star',   company: '네이버',       count: 14, weekCount: 2, grade: '👑', photoUrl: 'https://api.dicebear.com/7.x/personas/svg?seed=mealstar&backgroundColor=ffdfbf&skinColor=edb98a' },
+      { initials: 'PY', author: 'pasta_yang',  company: '현대자동차',   count: 11, weekCount: 2, grade: '👑', photoUrl: 'https://api.dicebear.com/7.x/personas/svg?seed=pastayang&backgroundColor=d1d4f9&skinColor=f5cfa0' },
+      { initials: 'RQ', author: 'ramen_queen', company: 'SK하이닉스',   count: 8,  weekCount: 1, grade: '🍽️', photoUrl: 'https://api.dicebear.com/7.x/personas/svg?seed=ramenqueen&backgroundColor=c0aede&skinColor=edb98a' },
+    ];
+
+    // ✅ 즉시 샘플 표시 (Storage 기다리지 않음)
+    rankingData = sample;
+    rankEl.innerHTML = rankingData.slice(0, 3).map((u, i) => renderRankRow(u, i)).join('');
+
+    // Storage 있으면 실제 데이터로 교체 시도
+    if (typeof window.storage === 'undefined') return;
     try {
       const keys = await window.storage.list('review:', true);
       const allKeys = keys?.keys || [];
-
-      if (allKeys.length === 0) {
-        countEl.textContent = '아직 리뷰가 없어요';
-        listEl.innerHTML = `<div class="review-empty"><span class="review-empty-icon">🍽️</span>첫 번째 리뷰를 남겨보세요!</div>`;
-        return;
-      }
-
-      countEl.textContent = `총 ${allKeys.length}개`;
-
-      const reviews = [];
-      for (const key of allKeys.slice(-20).reverse()) {
+      if (allKeys.length === 0) return;
+      const authorMap = {};
+      for (const key of allKeys) {
         try {
           const r = await window.storage.get(key, true);
-          if (r?.value) reviews.push(JSON.parse(r.value));
+          if (!r?.value) continue;
+          const rv = JSON.parse(r.value);
+          if (!authorMap[rv.author]) {
+            authorMap[rv.author] = { initials: rv.initials, author: rv.author, company: rv.company, count: 0 };
+          }
+          authorMap[rv.author].count++;
         } catch(e) {}
       }
-
-      listEl.innerHTML = reviews.map(r => `
-        <div class="review-card">
-          <div class="review-header">
-            <div class="review-avatar">${r.initials || '?'}</div>
-            <div class="review-meta">
-              <div class="review-author">${r.author} <span style="font-size:11px;color:var(--text-muted);font-weight:400;">· ${r.company}</span></div>
-              <div class="review-date">${r.date} · ${r.location}</div>
-            </div>
-            <div class="review-stars">${'⭐'.repeat(r.rating)}</div>
-          </div>
-          <div class="review-restaurant">${r.restaurant}</div>
-          <div class="review-text">${r.text}</div>
-        </div>
-      `).join('');
-
-    } catch(e) {
-      countEl.textContent = '';
-      listEl.innerHTML = `<div class="review-empty"><span class="review-empty-icon">⚠️</span>리뷰를 불러올 수 없어요</div>`;
-    }
+      const real = Object.values(authorMap).sort((a, b) => b.count - a.count);
+      if (real.length > 0) {
+        rankingData = real.map(u => ({ ...u, grade: getGrade(u.count).emoji }));
+        rankEl.innerHTML = rankingData.slice(0, rankingExpanded ? rankingData.length : 3).map((u, i) => renderRankRow(u, i)).join('');
+      }
+    } catch(e) { /* Storage 없으면 샘플 유지 */ }
   }
 
-  // ── 페이지 로드 시 로그인 상태 복원
+  function renderRankRow(u, i) {
+    const medals = ['🥇', '🥈', '🥉'];
+    const rankMark = medals[i] || `${i + 1}`;
+    const isMedal = i < 3;
+    const barWidth = Math.min(100, Math.round((u.count / 50) * 100));
+    const grade = typeof getGrade === 'function' ? getGrade(u.count) : { color: '#e8a045' };
+    const gradients = [
+      'linear-gradient(135deg,#e8a045,#c45c1a)',
+      'linear-gradient(135deg,#5DCAA5,#0F6E56)',
+      'linear-gradient(135deg,#7F77DD,#3C3489)',
+      'linear-gradient(135deg,#D4537E,#72243E)',
+      'linear-gradient(135deg,#378ADD,#0C447C)',
+      'linear-gradient(135deg,#639922,#27500A)',
+      'linear-gradient(135deg,#E24B4A,#791F1F)',
+    ];
+    const borderColors = ['#e8a045','#5DCAA5','#7F77DD','#D4537E','#378ADD','#639922','#E24B4A'];
+    const barColors = [
+      'linear-gradient(90deg,#e8a045,#c45c1a)',
+      'linear-gradient(90deg,#5DCAA5,#0F6E56)',
+      'linear-gradient(90deg,#7F77DD,#3C3489)',
+      'linear-gradient(90deg,#D4537E,#72243E)',
+      'linear-gradient(90deg,#378ADD,#0C447C)',
+      'linear-gradient(90deg,#639922,#27500A)',
+      'linear-gradient(90deg,#E24B4A,#791F1F)',
+    ];
+    const colorIdx = i % gradients.length;
+    const avatarHtml = u.photoUrl
+      ? `<img src="${u.photoUrl}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid ${borderColors[colorIdx]};flex-shrink:0;">`
+      : `<div style="width:36px;height:36px;border-radius:50%;background:${gradients[colorIdx]};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;border:2px solid ${borderColors[colorIdx]};">${u.initials}</div>`;
+    return `
+      <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:${isMedal?'18':'13'}px;min-width:24px;text-align:center;color:var(--text-muted);">${rankMark}</span>
+        ${avatarHtml}
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+            <span style="font-size:12px;font-weight:700;color:var(--text);">${u.author}</span>
+            <span style="font-size:10px;color:var(--text-muted);">· ${u.company}</span>
+            <span style="font-size:11px;">${u.grade}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
+            <div style="flex:1;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;">
+              <div style="height:100%;width:${barWidth}%;background:${barColors[colorIdx]};border-radius:2px;"></div>
+            </div>
+            <span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">이번주 ${u.weekCount||0}개 · 누적 ${u.count}개</span>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // ── 페이지 로드 시 실행
   window.addEventListener('load', () => {
-    const saved = localStorage.getItem('matissun_user');
-    if (saved) {
-      try {
-        currentUser = JSON.parse(saved);
-        document.getElementById('loginArea').classList.add('hidden');
-        document.getElementById('loggedInArea').classList.remove('hidden');
-        document.getElementById('userAvatar').textContent = currentUser.initials;
-        document.getElementById('userName').textContent = currentUser.nickname;
-        document.getElementById('userCompany').textContent = currentUser.company + ' 소속';
-      } catch(e) {}
+    // 순위 로딩
+    loadRanking();
+
+    // 로그인 상태 복원
+    const savedEmail = localStorage.getItem('matissun_current');
+    if (savedEmail) {
+      const saved = localStorage.getItem(`matissun_user_${savedEmail}`);
+      if (saved) {
+        try { currentUser = JSON.parse(saved); } catch(e) {}
+      }
     }
   });
 
