@@ -1441,17 +1441,16 @@
     <div class="step-dot active" id="dot0"></div>
     <div class="step-dot" id="dot1"></div>
     <div class="step-dot" id="dot2"></div>
-    <div class="step-dot" id="dot3"></div>
   </div>
 
   <!-- FORM -->
   <div id="formSection">
 
-    <!-- Step 1: 식사 시간 -->
+    <!-- Step 1: 식사시간 + 음식종류 -->
     <div class="card" id="step0">
       <div class="card-label">Step 1</div>
       <div class="card-title">어떤 식사인가요?</div>
-      <div class="options-grid cols-3">
+      <div class="options-grid cols-3" style="margin-bottom:16px;">
         <button class="opt-btn" onclick="select('meal','아침','🌅')" id="meal-아침">
           <span class="icon">🌅</span>아침
         </button>
@@ -1462,13 +1461,34 @@
           <span class="icon">🌙</span>저녁
         </button>
       </div>
+      <div class="card-title" style="font-size:15px;margin-bottom:12px;">어떤 음식이 당기나요?</div>
+      <div class="options-grid cols-3">
+        <button class="opt-btn" onclick="select('foodType','한식','🍲')" id="foodType-한식">
+          <span class="icon">🍲</span>한식
+        </button>
+        <button class="opt-btn" onclick="select('foodType','중식','🥢')" id="foodType-중식">
+          <span class="icon">🥢</span>중식
+        </button>
+        <button class="opt-btn" onclick="select('foodType','일식','🍣')" id="foodType-일식">
+          <span class="icon">🍣</span>일식
+        </button>
+        <button class="opt-btn" onclick="select('foodType','양식','🍝')" id="foodType-양식">
+          <span class="icon">🍝</span>양식
+        </button>
+        <button class="opt-btn" onclick="select('foodType','분식','🍜')" id="foodType-분식">
+          <span class="icon">🍜</span>분식
+        </button>
+        <button class="opt-btn" onclick="select('foodType','랜덤','🎲')" id="foodType-랜덤">
+          <span class="icon">🎲</span>랜덤
+        </button>
+      </div>
     </div>
 
-    <!-- Step 2: 인원수 -->
+    <!-- Step 2: 인원수 + 동행유형 -->
     <div class="card" id="step1">
       <div class="card-label">Step 2</div>
       <div class="card-title">몇 명이서 드시나요?</div>
-      <div class="number-selector">
+      <div class="number-selector" style="margin-bottom:20px;">
         <button class="num-btn" onclick="changeCount(-1)">−</button>
         <div>
           <div class="num-display" id="countDisplay">2</div>
@@ -1476,12 +1496,7 @@
         </div>
         <button class="num-btn" onclick="changeCount(1)">＋</button>
       </div>
-    </div>
-
-    <!-- Step 3: 동행 유형 -->
-    <div class="card" id="step2">
-      <div class="card-label">Step 3</div>
-      <div class="card-title">누구와 함께하나요?</div>
+      <div class="card-title" style="font-size:15px;margin-bottom:12px;">누구와 함께하나요?</div>
       <div class="options-grid cols-2">
         <button class="opt-btn" onclick="select('companion','직장동료','💼')" id="companion-직장동료">
           <span class="icon">💼</span>직장 동료
@@ -1498,9 +1513,9 @@
       </div>
     </div>
 
-    <!-- Step 4: 가격대 -->
-    <div class="card" id="step3">
-      <div class="card-label">Step 4</div>
+    <!-- Step 3: 예산 -->
+    <div class="card" id="step2">
+      <div class="card-label">Step 3</div>
       <div class="card-title">예산은 어느 정도인가요? <span style="font-size:12px;color:var(--text-muted)">(1인 기준)</span></div>
       <div class="options-grid cols-3">
         <button class="opt-btn" onclick="select('price','저가','💰')" id="price-저가">
@@ -1713,6 +1728,7 @@
 <script>
   const state = {
     meal: null,
+    foodType: null,
     count: 2,
     companion: null,
     price: null,
@@ -1950,18 +1966,26 @@
   }
 
   function checkReady() {
-    const ready = state.meal && state.companion && state.price;
+    const ready = state.meal && state.foodType && state.companion && state.price;
     document.getElementById('searchBtn').disabled = !ready;
   }
 
   function updateStepDots() {
-    const filled = [!!state.meal, true, !!state.companion, !!state.price];
-    const currentStep = filled.filter(Boolean).length - 1;
+    // step1 완료: meal AND foodType 둘 다
+    // step2 완료: companion
+    // step3 완료: price
+    const s1 = !!(state.meal && state.foodType);
+    const s2 = !!state.companion;
+    const s3 = !!state.price;
+    const filled = [s1, s2, s3];
+    const currentStep = filled.indexOf(false);
+    const activeIdx = currentStep === -1 ? 2 : currentStep;
     filled.forEach((done, i) => {
       const dot = document.getElementById(`dot${i}`);
+      if (!dot) return;
       dot.className = 'step-dot';
-      if (i < currentStep) dot.classList.add('done');
-      else if (i === currentStep) dot.classList.add('active');
+      if (done && i < activeIdx) dot.classList.add('done');
+      else if (i === activeIdx) dot.classList.add('active');
     });
   }
 
@@ -2153,17 +2177,17 @@ JSON만 출력:
 
 [알고리즘 분석 결과]
 위치: ${locationStr} 근처 도보 10분 이내
+선택 음식 종류: ${state.foodType === '랜덤' ? '제한 없음 (AI 자유 추천)' : state.foodType}
 추천 음식 장르 (우선순위 순): ${algo.topCats.join(' > ')}
 분위기 키워드: ${algo.vibeKeywords.join(', ')}
 운영시간 조건: ${algo.timeConstraint}
-인원 조건: ${algo.groupConstraint}
 1인 예산: ${priceRange}
-식사: ${state.meal} / 인원: ${state.count}명 / 동행: ${state.companion} / 가격대: ${state.price}
+식사: ${state.meal} / 음식종류: ${state.foodType} / 인원: ${state.count}명 / 동행: ${state.companion} / 가격대: ${state.price}
 
 [추천 지시]
-- 위 장르 우선순위를 반영해 서로 다른 음식 종류 3곳 추천
-- 분위기 키워드에 맞는 곳 선택
-- 인원·시간 조건 충족하는 곳만 포함
+- 선택 음식 종류(${state.foodType === '랜덤' ? '자유' : state.foodType})에 맞는 식당 3곳 추천
+- 동행 유형(${state.companion})과 인원수(${state.count}명)에 맞는 분위기 우선
+- 운영시간 조건 충족하는 곳만 포함
 - 식당 이름은 실제 한국 상호명처럼 자연스럽게 (예: "미가", "온기정", "별미옥")
 - 지역명·동네명을 상호에 붙이지 말 것
 - 정확히 3곳만${langNote}
@@ -2172,7 +2196,7 @@ JSON만 출력:
 - 반드시 signature 필드: 이 식당의 대표 시그니처 메뉴 이름 (한 가지)
 
 JSON만 출력 (다른 텍스트 절대 금지):
-[{"name":"미가","category":"고기구이","rating":4.5,"distance":"도보 5분","pricePerPerson":"25,000원","parking":true,"parkingNote":"건물 내 주차 2시간 무료","description":"한 줄 소개","tags":["태그1","태그2"],"recommend":"추천 이유","signature":"한우 꽃등심","photoKeyword":"korean beef BBQ grilled meat","orderCombo":[{"menu":"한우 등심 200g","unitPrice":"32,000원","qty":${state.count},"totalPrice":"${32000 * state.count}원","isSignature":true},{"menu":"된장찌개","unitPrice":"3,000원","qty":${state.count},"totalPrice":"${3000 * state.count}원","isSignature":false},{"menu":"공기밥","unitPrice":"1,000원","qty":${state.count},"totalPrice":"${1000 * state.count}원","isSignature":false}]}]`;
+[{"name":"미가","category":"고기구이","rating":4.5,"distance":"도보 5분","pricePerPerson":"25,000원","parking":true,"parkingNote":"건물 내 주차 2시간 무료","description":"한 줄 소개","tags":["태그1","태그2"],"recommend":"추천 이유","signature":"한우 꽃등심","photoKeyword":"korean beef BBQ grilled meat","orderCombo":[{"menu":"한우 등심 200g","unitPrice":"32,000원","qty":2,"totalPrice":"64,000원","isSignature":true},{"menu":"된장찌개","unitPrice":"3,000원","qty":2,"totalPrice":"6,000원","isSignature":false}]}]`;
   }
 
   // ── 카카오 API 키
@@ -2180,6 +2204,11 @@ JSON만 출력 (다른 텍스트 절대 금지):
 
   // ── 카테고리 → 카카오 검색 키워드 매핑
   function getCategoryKeyword(topCats) {
+    // foodType이 선택된 경우 직접 사용
+    if (state.foodType && state.foodType !== '랜덤') {
+      const direct = {'한식':'한식','중식':'중식','일식':'일식','양식':'양식','분식':'분식'};
+      if (direct[state.foodType]) return direct[state.foodType];
+    }
     const map = {
       '한식': '한식', '고기구이': '고기구이', '고기집': '고기구이',
       '일식': '일식', '일식코스': '일식', '중식': '중식',
@@ -2330,14 +2359,16 @@ JSON만 출력:
 
     // Tags (only on first round)
     if (round === 1) {
+      const foodEmoji = {'한식':'🍲','중식':'🥢','일식':'🍣','양식':'🍝','분식':'🍜','랜덤':'🎲'}[state.foodType] || '🍽️';
+      const companionEmoji = {'직장동료':'💼','고객사':'🤝','친구':'👫','혼자':'🙋'}[state.companion] || '👥';
       const tagData = [
         { label: state.meal, emoji: state.meal === '아침' ? '🌅' : state.meal === '점심' ? '☀️' : '🌙' },
-        { label: `${state.count}명`, emoji: '👥' },
-        { label: state.companion, emoji: '🤝' },
+        { label: state.foodType, emoji: foodEmoji },
+        { label: `${state.count}명 · ${state.companion}`, emoji: companionEmoji },
         { label: state.price, emoji: '💰' }
       ];
-      document.getElementById('tagSummary').innerHTML = tagData.map(t =>
-        `<span class="tag">${t.emoji} ${t.label}</span>`
+      document.getElementById('tagSummary').innerHTML = tagData.map(tag =>
+        `<span class="tag">${tag.emoji} ${tag.label}</span>`
       ).join('');
       document.getElementById('locationText').textContent = state.locationName || '현재 위치 기준';
       document.getElementById('locationSub').textContent = state.locationDetail || '주변 도보 10분 이내';
@@ -2393,34 +2424,30 @@ JSON만 출력:
         ? `<div style="position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,0.65);color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;backdrop-filter:blur(4px);">★ ${r.signature}</div>`
         : '';
 
-      // 카테고리별 Unsplash 고정 사진 (저작권 무료, 안정적 로딩)
-      const foodPhotos = {
-        '한식':       'https://images.unsplash.com/photo-1498654896293-37aacf113fd9?w=600&h=300&fit=crop&auto=format',
-        '고기집':     'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&h=300&fit=crop&auto=format',
-        '고기구이':   'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&h=300&fit=crop&auto=format',
-        '일식':       'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&h=300&fit=crop&auto=format',
-        '일식코스':   'https://images.unsplash.com/photo-1611143669185-af224c5e3252?w=600&h=300&fit=crop&auto=format',
-        '중식':       'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=600&h=300&fit=crop&auto=format',
-        '분식':       'https://images.unsplash.com/photo-1635363638580-c2809d049eee?w=600&h=300&fit=crop&auto=format',
-        '해물':       'https://images.unsplash.com/photo-1569144157591-c60f3f82f137?w=600&h=300&fit=crop&auto=format',
-        '양식':       'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=300&fit=crop&auto=format',
-        '파인다이닝': 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=300&fit=crop&auto=format',
-        '한정식':     'https://images.unsplash.com/photo-1498654896293-37aacf113fd9?w=600&h=300&fit=crop&auto=format',
-        '경양식':     'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=600&h=300&fit=crop&auto=format',
-        '국밥':       'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=600&h=300&fit=crop&auto=format',
-        '한식백반':   'https://images.unsplash.com/photo-1498654896293-37aacf113fd9?w=600&h=300&fit=crop&auto=format',
-        '라멘':       'https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=600&h=300&fit=crop&auto=format',
-        '덮밥':       'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=600&h=300&fit=crop&auto=format',
-        '냉면':       'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=600&h=300&fit=crop&auto=format',
-        '술집·포차':  'https://images.unsplash.com/photo-1574701148212-8518049c7b2c?w=600&h=300&fit=crop&auto=format',
-        '일식주점':   'https://images.unsplash.com/photo-1527334919515-b8dee906a34b?w=600&h=300&fit=crop&auto=format',
-        '바·라운지':  'https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=600&h=300&fit=crop&auto=format',
-        '이자카야':   'https://images.unsplash.com/photo-1527334919515-b8dee906a34b?w=600&h=300&fit=crop&auto=format',
-        '카페':       'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=600&h=300&fit=crop&auto=format',
-      };
-      const finalPhotoUrl = r.photoUrl
-        || foodPhotos[r.category]
-        || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=300&fit=crop&auto=format';
+      // 카테고리별 그라데이션 배경 (외부 URL 없이 항상 표시)
+      const photoBg = {
+        '한식':       'linear-gradient(135deg,#ff9a56,#ff6b35)',
+        '고기집':     'linear-gradient(135deg,#c0392b,#8b0000)',
+        '고기구이':   'linear-gradient(135deg,#c0392b,#8b0000)',
+        '일식':       'linear-gradient(135deg,#e74c3c,#c0392b)',
+        '일식코스':   'linear-gradient(135deg,#e74c3c,#c0392b)',
+        '중식':       'linear-gradient(135deg,#e74c3c,#f39c12)',
+        '분식':       'linear-gradient(135deg,#f39c12,#e67e22)',
+        '해물':       'linear-gradient(135deg,#1a8cff,#0066cc)',
+        '양식':       'linear-gradient(135deg,#8e44ad,#6c3483)',
+        '파인다이닝': 'linear-gradient(135deg,#2c3e50,#34495e)',
+        '한정식':     'linear-gradient(135deg,#27ae60,#1e8449)',
+        '경양식':     'linear-gradient(135deg,#d35400,#a04000)',
+        '국밥':       'linear-gradient(135deg,#e67e22,#ca6f1e)',
+        '한식백반':   'linear-gradient(135deg,#ff9a56,#ff6b35)',
+        '라멘':       'linear-gradient(135deg,#e74c3c,#922b21)',
+        '덮밥':       'linear-gradient(135deg,#f39c12,#d68910)',
+        '술집·포차':  'linear-gradient(135deg,#8e44ad,#512e5f)',
+        '일식주점':   'linear-gradient(135deg,#c0392b,#7b241c)',
+        '바·라운지':  'linear-gradient(135deg,#1a252f,#2c3e50)',
+      }[r.category] || 'linear-gradient(135deg,#e8a045,#c45c1a)';
+
+      const finalPhotoUrl = r.photoUrl || null;
 
       // 식당 데이터를 전역 맵에 저장 (onclick에 JSON 직접 넣지 않음)
       const rKey = `r_${i}_${Date.now()}`;
@@ -2429,11 +2456,13 @@ JSON만 출력:
 
       return `
       <div class="restaurant-card" style="--i: ${i}">
-        <div class="r-photo-wrap" style="position:relative;cursor:pointer;" onclick="openDetail('${rKey}')">
-          <img src="${finalPhotoUrl}" alt="${r.category}" loading="lazy"
-            style="display:block;width:100%;height:160px;object-fit:cover;"
-            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-          <div class="r-photo-placeholder" style="display:none">${catEmoji}</div>
+        <div class="r-photo-wrap" style="position:relative;cursor:pointer;height:160px;background:${photoBg};display:flex;align-items:center;justify-content:center;overflow:hidden;" onclick="openDetail('${rKey}')">
+          ${finalPhotoUrl
+            ? `<img src="${finalPhotoUrl}" alt="${r.category}" loading="lazy"
+                style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"
+                onerror="this.remove()">`
+            : ''}
+          <span style="font-size:52px;opacity:0.85;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.3));">${catEmoji}</span>
           ${sigMenuBadge}
         </div>
         <div class="r-header" style="cursor:pointer;" onclick="openDetail('${rKey}')">
@@ -3395,12 +3424,12 @@ JSON만 출력:
 
   function resetApp() {
     state.meal = null;
+    state.foodType = null;
     state.companion = null;
     state.price = null;
     state.count = 2;
 
     document.querySelectorAll('.opt-btn').forEach(el => el.classList.remove('selected'));
-    document.getElementById('countDisplay').textContent = '2';
     document.getElementById('searchBtn').disabled = true;
 
     document.getElementById('resultsSection').classList.add('hidden');
