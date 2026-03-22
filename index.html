@@ -1691,9 +1691,18 @@
         <div id="restaurantSearchResults" style="margin-top:12px;"></div>
       </div>
 
-      <!-- 전체 리뷰 목록 -->
-      <div class="review-count-bar">
-        <span class="review-count-label">🗣️ 직장인 리뷰</span>
+      <!-- 리뷰 탭 + 목록 -->
+      <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:14px;">
+        <button id="tabAllReviews" onclick="switchReviewTab('all')"
+          style="flex:1;padding:10px 0;background:none;border:none;border-bottom:2px solid var(--accent);margin-bottom:-2px;font-family:'Jua',sans-serif;font-size:14px;color:var(--accent);cursor:pointer;">
+          🗣️ 전체 리뷰
+        </button>
+        <button id="tabMyReviews" onclick="switchReviewTab('my')"
+          style="flex:1;padding:10px 0;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:'Jua',sans-serif;font-size:14px;color:var(--text-muted);cursor:pointer;">
+          ⭐ 내 리뷰 (별점순)
+        </button>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:8px;">
         <span class="review-count-num" id="reviewCountLabel"></span>
       </div>
       <div id="reviewList"></div>
@@ -3367,30 +3376,73 @@ JSON만 출력:
     }
   };
 
+  // ── 리뷰 탭 전환
+  let currentReviewTab = 'all';
+
+  function switchReviewTab(tab) {
+    currentReviewTab = tab;
+    const allBtn = document.getElementById('tabAllReviews');
+    const myBtn  = document.getElementById('tabMyReviews');
+    if (!allBtn || !myBtn) return;
+
+    if (tab === 'all') {
+      allBtn.style.borderBottomColor = 'var(--accent)';
+      allBtn.style.color = 'var(--accent)';
+      myBtn.style.borderBottomColor = 'transparent';
+      myBtn.style.color = 'var(--text-muted)';
+    } else {
+      myBtn.style.borderBottomColor = 'var(--accent)';
+      myBtn.style.color = 'var(--accent)';
+      allBtn.style.borderBottomColor = 'transparent';
+      allBtn.style.color = 'var(--text-muted)';
+    }
+    loadReviews();
+  }
+
   // ── 리뷰 불러오기
   async function loadReviews() {
     const listEl = document.getElementById('reviewList');
     const countEl = document.getElementById('reviewCountLabel');
+    const isMyTab = currentReviewTab === 'my';
 
-    // 즉시 빈 상태 표시
-    countEl.textContent = '아직 리뷰가 없어요';
-    listEl.innerHTML = `<div class="review-empty"><span class="review-empty-icon">🍽️</span>첫 번째 리뷰를 남겨보세요!</div>`;
+    listEl.innerHTML = `<div class="review-empty"><span class="review-empty-icon">🍽️</span>${isMyTab ? '아직 남긴 리뷰가 없어요!' : '첫 번째 리뷰를 남겨보세요!'}</div>`;
+    countEl.textContent = '';
 
     try {
       const allKeys = await store.list('review:');
       if (!allKeys || allKeys.length === 0) return;
 
-      countEl.textContent = `총 ${allKeys.length}개`;
       const reviews = [];
-      for (const key of allKeys.slice(-30).reverse()) {
+      for (const key of allKeys.slice(-50).reverse()) {
         try {
           const val = await store.get(key);
           if (val) reviews.push(JSON.parse(val));
         } catch(e) {}
       }
-      if (reviews.length === 0) return;
 
-      listEl.innerHTML = reviews.map(r => {
+      // 탭별 필터 + 정렬
+      let filtered;
+      if (isMyTab) {
+        // 내 리뷰만 → 별점 높은 순, 같으면 최신 순
+        filtered = reviews
+          .filter(r => currentUser && r.author === currentUser.nickname)
+          .sort((a, b) => b.rating - a.rating || parseInt(b.id) - parseInt(a.id));
+
+        if (filtered.length === 0) {
+          countEl.textContent = '';
+          listEl.innerHTML = `<div class="review-empty"><span class="review-empty-icon">✏️</span>아직 남긴 리뷰가 없어요.<br><span style="font-size:12px;">위에서 맛집을 검색해 첫 리뷰를 남겨보세요!</span></div>`;
+          return;
+        }
+        countEl.textContent = `내 리뷰 ${filtered.length}개 · ⭐ 별점순`;
+      } else {
+        // 전체 리뷰 → 최신 순
+        filtered = reviews.sort((a, b) => parseInt(b.id) - parseInt(a.id));
+        countEl.textContent = `총 ${filtered.length}개`;
+      }
+
+      if (filtered.length === 0) return;
+
+      listEl.innerHTML = filtered.map(r => {
         const grade = getGrade(r.reviewCount || 1);
         const avatarHtml = r.photoUrl
           ? `<img src="${r.photoUrl}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1.5px solid ${grade.color};">`
@@ -3398,6 +3450,8 @@ JSON만 출력:
         const encodedAuthor = encodeURIComponent(r.author);
         const encodedCompany = encodeURIComponent(r.company);
         const encodedPhoto = encodeURIComponent(r.photoUrl || '');
+        const isMine = currentUser && r.author === currentUser.nickname;
+
         return `
         <div class="review-card">
           <div class="review-header">
@@ -3410,17 +3464,34 @@ JSON만 출력:
                 <span style="font-size:11px;color:var(--text-muted);font-weight:400;"> · ${r.company}</span>
                 <span style="font-size:11px;background:rgba(232,160,69,0.12);color:${grade.color};border-radius:4px;padding:1px 6px;margin-left:4px;">${grade.emoji} ${grade.name}</span>
               </div>
-              <div class="review-date">${r.date} · ${r.location}</div>
+              <div class="review-date">${r.date} · ${r.location || ''}</div>
             </div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
             <div class="review-restaurant">${r.restaurant}</div>
             <div style="font-size:13px;letter-spacing:1px;">${stars(r.rating)}</div>
           </div>
+          ${r.address ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">📍 ${r.address}</div>` : ''}
           <div class="review-text">${r.text}</div>
+          ${isMine && isMyTab ? `
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;">
+            <button onclick="deleteMyReview('${r.id}')" style="font-size:11px;color:#e07070;background:none;border:none;cursor:pointer;padding:2px 6px;">🗑️ 삭제</button>
+          </div>` : ''}
         </div>`;
       }).join('');
     } catch(e) { /* 오류 시 빈 상태 유지 */ }
+  }
+
+  // ── 내 리뷰 삭제
+  async function deleteMyReview(reviewId) {
+    if (!confirm('이 리뷰를 삭제할까요?')) return;
+    try {
+      await store.set(`review:${reviewId}`, JSON.stringify({ deleted: true }));
+      currentUser.reviewCount = Math.max(0, (currentUser.reviewCount || 1) - 1);
+      localStorage.setItem(`matissun_user_${currentUser.email}`, JSON.stringify(currentUser));
+      renderCommunity();
+      loadReviews();
+    } catch(e) {}
   }
 
   // ── 메인 화면 리뷰어 순위
