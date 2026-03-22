@@ -1423,7 +1423,10 @@
   <!-- 탭 네비게이션 -->
   <div class="tab-nav">
     <button class="tab-btn active" id="tabRecommend" onclick="switchTab('recommend')">🍽️ 맛집 추천</button>
-    <button class="tab-btn" id="tabCommunity" onclick="switchTab('community')">💬 커뮤니티</button>
+    <button class="tab-btn" id="tabCommunity" onclick="switchTab('community')" style="position:relative;">
+      💬 커뮤니티
+      <span id="notiBadge" style="display:none;position:absolute;top:6px;right:12px;background:#e8a045;color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 6px;line-height:1.4;"></span>
+    </button>
   </div>
 
   <!-- Location Bar (always visible) -->
@@ -1694,12 +1697,17 @@
       <!-- 리뷰 탭 + 목록 -->
       <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:14px;">
         <button id="tabAllReviews" onclick="switchReviewTab('all')"
-          style="flex:1;padding:10px 0;background:none;border:none;border-bottom:2px solid var(--accent);margin-bottom:-2px;font-family:'Jua',sans-serif;font-size:14px;color:var(--accent);cursor:pointer;">
-          🗣️ 전체 리뷰
+          style="flex:1;padding:10px 0;background:none;border:none;border-bottom:2px solid var(--accent);margin-bottom:-2px;font-family:'Jua',sans-serif;font-size:13px;color:var(--accent);cursor:pointer;">
+          🗣️ 전체
         </button>
         <button id="tabMyReviews" onclick="switchReviewTab('my')"
-          style="flex:1;padding:10px 0;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:'Jua',sans-serif;font-size:14px;color:var(--text-muted);cursor:pointer;">
-          ⭐ 내 리뷰 (별점순)
+          style="flex:1;padding:10px 0;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:'Jua',sans-serif;font-size:13px;color:var(--text-muted);cursor:pointer;">
+          ⭐ 내 리뷰
+        </button>
+        <button id="tabFeedReviews" onclick="switchReviewTab('feed')"
+          style="flex:1;padding:10px 0;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:'Jua',sans-serif;font-size:13px;color:var(--text-muted);cursor:pointer;position:relative;">
+          🔔 구독 피드
+          <span id="feedBadge" style="display:none;position:absolute;top:6px;right:8px;background:#e8a045;color:#fff;font-size:9px;font-weight:700;border-radius:10px;padding:1px 5px;line-height:1.4;"></span>
         </button>
       </div>
       <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:8px;">
@@ -2733,6 +2741,185 @@ JSON만 출력:
     }
   }
 
+  // ────────────────────────────────────────
+  // 구독 & 알림 시스템
+  // ────────────────────────────────────────
+
+  // 내 구독 목록 (로컬 저장)
+  function getMySubscriptions() {
+    if (!currentUser) return [];
+    try { return JSON.parse(localStorage.getItem(`matissun_subs_${currentUser.email}`) || '[]'); }
+    catch(e) { return []; }
+  }
+
+  function saveMySubscriptions(subs) {
+    if (!currentUser) return;
+    localStorage.setItem(`matissun_subs_${currentUser.email}`, JSON.stringify(subs));
+  }
+
+  // 마지막으로 본 리뷰 시각
+  function getLastSeen() {
+    if (!currentUser) return 0;
+    return parseInt(localStorage.getItem(`matissun_lastseen_${currentUser.email}`) || '0');
+  }
+
+  function updateLastSeen() {
+    if (!currentUser) return;
+    localStorage.setItem(`matissun_lastseen_${currentUser.email}`, Date.now().toString());
+  }
+
+  // ── 구독 토글
+  function toggleSubscribe(encodedAuthor) {
+    const author = decodeURIComponent(encodedAuthor);
+    if (!currentUser) return;
+
+    let subs = getMySubscriptions();
+    const isSubscribed = subs.includes(author);
+
+    if (isSubscribed) {
+      subs = subs.filter(s => s !== author);
+    } else {
+      subs.push(author);
+    }
+    saveMySubscriptions(subs);
+
+    // 버튼 즉시 업데이트
+    const btn = document.getElementById('subscribeBtn');
+    if (btn) {
+      const nowSub = subs.includes(author);
+      btn.textContent = nowSub ? '🔔 구독 중 (취소)' : '🔔 구독하기';
+      btn.style.borderColor = nowSub ? '#e07070' : 'var(--accent)';
+      btn.style.background = nowSub ? 'rgba(224,112,112,0.08)' : 'rgba(232,160,69,0.08)';
+      btn.style.color = nowSub ? '#e07070' : 'var(--accent)';
+    }
+
+    // 알림 배지 갱신
+    checkNewReviewNotifications();
+  }
+
+  // ── 새 리뷰 알림 체크 (앱 열 때)
+  async function checkNewReviewNotifications() {
+    if (!currentUser) return;
+
+    const subs = getMySubscriptions();
+    if (subs.length === 0) {
+      updateNotiBadge(0);
+      return;
+    }
+
+    const lastSeen = getLastSeen();
+
+    try {
+      const allKeys = await store.list('review:');
+      if (!allKeys || allKeys.length === 0) { updateNotiBadge(0); return; }
+
+      let newCount = 0;
+      for (const key of allKeys.slice(-50).reverse()) {
+        try {
+          const val = await store.get(key);
+          if (!val) continue;
+          const rv = JSON.parse(val);
+          if (rv.deleted) continue;
+          // 구독한 사람이 쓴 리뷰 + 내가 마지막으로 본 이후
+          if (subs.includes(rv.author) && parseInt(rv.id) > lastSeen) {
+            newCount++;
+          }
+        } catch(e) {}
+      }
+      updateNotiBadge(newCount);
+    } catch(e) {
+      updateNotiBadge(0);
+    }
+  }
+
+  function updateNotiBadge(count) {
+    const badge = document.getElementById('notiBadge');
+    if (!badge) return;
+    if (count > 0) {
+      badge.textContent = count > 99 ? '99+' : count;
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  // ── 구독한 사람 새 리뷰 피드 표시
+  async function loadSubscriptionFeed(containerEl) {
+    const subs = getMySubscriptions();
+    if (subs.length === 0) {
+      containerEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">
+        아직 구독한 맛집러가 없어요.<br>
+        <span style="font-size:12px;">리뷰어 프로필에서 🔔 구독하기를 눌러보세요!</span>
+      </div>`;
+      return;
+    }
+
+    containerEl.innerHTML = `<div style="text-align:center;padding:12px;color:var(--text-muted);font-size:13px;">불러오는 중...</div>`;
+
+    try {
+      const allKeys = await store.list('review:');
+      if (!allKeys || allKeys.length === 0) {
+        containerEl.innerHTML = `<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px;">구독한 맛집러의 리뷰가 없어요.</div>`;
+        return;
+      }
+
+      const feedReviews = [];
+      for (const key of allKeys.slice(-100).reverse()) {
+        try {
+          const val = await store.get(key);
+          if (!val) continue;
+          const rv = JSON.parse(val);
+          if (!rv.deleted && subs.includes(rv.author)) feedReviews.push(rv);
+        } catch(e) {}
+      }
+
+      if (feedReviews.length === 0) {
+        containerEl.innerHTML = `<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px;">구독한 맛집러의 리뷰가 아직 없어요.</div>`;
+        return;
+      }
+
+      // 최신순 정렬
+      feedReviews.sort((a, b) => parseInt(b.id) - parseInt(a.id));
+
+      const lastSeen = getLastSeen();
+      containerEl.innerHTML = feedReviews.slice(0, 20).map(r => {
+        const grade = getGrade(r.reviewCount || 1);
+        const isNew = parseInt(r.id) > lastSeen;
+        const avatarHtml = r.photoUrl
+          ? `<img src="${r.photoUrl}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1.5px solid ${grade.color};">`
+          : `<div class="review-avatar" style="border-color:${grade.color};color:${grade.color};">${r.initials||'?'}</div>`;
+        const encodedAuthor = encodeURIComponent(r.author);
+        const encodedCompany = encodeURIComponent(r.company||'');
+        const encodedPhoto = encodeURIComponent(r.photoUrl||'');
+        return `
+        <div class="review-card" style="${isNew ? 'border-color:var(--accent);background:rgba(232,160,69,0.03);' : ''}">
+          ${isNew ? `<div style="font-size:10px;font-weight:700;color:var(--accent);margin-bottom:6px;">🆕 NEW</div>` : ''}
+          <div class="review-header">
+            <div onclick="openReviewerProfile('${encodedAuthor}','${encodedCompany}','${r.initials||'?'}','${encodedPhoto}','${grade.emoji}',${r.reviewCount||1},0)" style="cursor:pointer;">${avatarHtml}</div>
+            <div class="review-meta">
+              <div class="review-author">
+                <span onclick="openReviewerProfile('${encodedAuthor}','${encodedCompany}','${r.initials||'?'}','${encodedPhoto}','${grade.emoji}',${r.reviewCount||1},0)" style="cursor:pointer;text-decoration:underline dotted;">${r.author}</span>
+                <span style="font-size:11px;color:var(--text-muted);"> · ${r.company||''}</span>
+              </div>
+              <div class="review-date">${r.date||''} · ${r.location||''}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="review-restaurant">${r.restaurant}</div>
+            <div>${stars(r.rating)}</div>
+          </div>
+          <div class="review-text">${r.text}</div>
+        </div>`;
+      }).join('');
+
+      // 읽음 처리
+      updateLastSeen();
+      updateNotiBadge(0);
+    } catch(e) {
+      containerEl.innerHTML = `<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px;">피드를 불러올 수 없어요.</div>`;
+    }
+  }
+
   // ── 네비게이션
   function goHome() {
     // 모든 섹션 숨기기
@@ -2934,6 +3121,16 @@ JSON만 출력:
       </div>`).join('');
 
     const profileEl = document.getElementById('reviewerProfileSection');
+
+    // 구독 상태 확인
+    const mySubscriptions = getMySubscriptions();
+    const isSubscribed = mySubscriptions.includes(author);
+    const subscribeBtn = (!isMine && currentUser) ? `
+      <button id="subscribeBtn" onclick="toggleSubscribe('${encodeURIComponent(author)}')"
+        style="margin-top:12px;padding:8px 20px;border-radius:20px;border:1.5px solid ${isSubscribed ? '#e07070' : 'var(--accent)'};background:${isSubscribed ? 'rgba(224,112,112,0.08)' : 'rgba(232,160,69,0.08)'};color:${isSubscribed ? '#e07070' : 'var(--accent)'};font-family:'Jua',sans-serif;font-size:13px;cursor:pointer;transition:all 0.2s;">
+        ${isSubscribed ? '🔔 구독 중 (취소)' : '🔔 구독하기'}
+      </button>` : '';
+
     profileEl.innerHTML = `
       <button class="detail-back-btn" onclick="closeReviewerProfile()">← 돌아가기</button>
 
@@ -2946,6 +3143,7 @@ JSON만 출력:
           <span style="font-size:16px;">${gradeEmoji}</span>
           <span style="font-size:13px;font-weight:700;color:${grade.color};">${grade.name}</span>
         </div>
+        ${subscribeBtn}
         <div style="display:flex;justify-content:center;gap:24px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
           <div style="text-align:center;">
             <div style="font-size:18px;font-weight:700;color:var(--accent);">${totalCount}</div>
@@ -3213,7 +3411,12 @@ JSON만 출력:
       if (el) el.classList.toggle('hidden-by-tab', !isRecommend);
     });
     document.getElementById('communitySection').classList.toggle('hidden', isRecommend);
-    if (!isRecommend) { renderCommunity(); loadReviews(); }
+    if (!isRecommend) {
+      renderCommunity();
+      loadReviews();
+      // 커뮤니티 탭 진입 시 알림 체크
+      setTimeout(() => checkNewReviewNotifications(), 300);
+    }
   }
 
   // ── 이메일 인증 코드 발송 (시뮬레이션)
@@ -3381,22 +3584,21 @@ JSON만 출력:
 
   function switchReviewTab(tab) {
     currentReviewTab = tab;
-    const allBtn = document.getElementById('tabAllReviews');
-    const myBtn  = document.getElementById('tabMyReviews');
-    if (!allBtn || !myBtn) return;
+    const tabs = { all: 'tabAllReviews', my: 'tabMyReviews', feed: 'tabFeedReviews' };
+    Object.entries(tabs).forEach(([key, id]) => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      const active = key === tab;
+      btn.style.borderBottomColor = active ? 'var(--accent)' : 'transparent';
+      btn.style.color = active ? 'var(--accent)' : 'var(--text-muted)';
+    });
 
-    if (tab === 'all') {
-      allBtn.style.borderBottomColor = 'var(--accent)';
-      allBtn.style.color = 'var(--accent)';
-      myBtn.style.borderBottomColor = 'transparent';
-      myBtn.style.color = 'var(--text-muted)';
+    if (tab === 'feed') {
+      document.getElementById('reviewCountLabel').textContent = '';
+      loadSubscriptionFeed(document.getElementById('reviewList'));
     } else {
-      myBtn.style.borderBottomColor = 'var(--accent)';
-      myBtn.style.color = 'var(--accent)';
-      allBtn.style.borderBottomColor = 'transparent';
-      allBtn.style.color = 'var(--text-muted)';
+      loadReviews();
     }
-    loadReviews();
   }
 
   // ── 리뷰 불러오기
@@ -3625,7 +3827,11 @@ JSON만 출력:
     if (savedEmail) {
       const saved = localStorage.getItem(`matissun_user_${savedEmail}`);
       if (saved) {
-        try { currentUser = JSON.parse(saved); } catch(e) {}
+        try {
+          currentUser = JSON.parse(saved);
+          // 알림 배지 체크
+          setTimeout(() => checkNewReviewNotifications(), 500);
+        } catch(e) {}
       }
     }
   });
